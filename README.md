@@ -32,10 +32,45 @@ julia> Pkg.add("ITensorQuantumOperatorDefinitions")
 ## Examples
 
 ````julia
-using ITensorQuantumOperatorDefinitions: ITensorQuantumOperatorDefinitions
+using ITensorBase: ITensor, Index, tags
+using ITensorQuantumOperatorDefinitions:
+  OpName, SiteType, StateName, ValName, op, siteind, siteinds, state, val
+using Test: @test
 ````
 
-Examples go here.
+States and operators as Julia arrays
+
+````julia
+@test val(ValName("Up"), SiteType("S=1/2")) == 1
+@test val(ValName("Dn"), SiteType("S=1/2")) == 2
+@test state(StateName("Up"), SiteType("S=1/2")) == [1, 0]
+@test state(StateName("Dn"), SiteType("S=1/2")) == [0, 1]
+@test op(OpName("X"), SiteType("S=1/2")) == [0 1; 1 0]
+@test op(OpName("Z"), SiteType("S=1/2")) == [1 0; 0 -1]
+````
+
+Index constructors
+
+````julia
+@test siteind("S=1/2") isa Index
+@test Int(length(siteind("S=1/2"))) == 2
+@test "S=1/2" in tags(siteind("S=1/2"))
+@test siteinds("S=1/2", 4) isa Vector{<:Index}
+@test length(siteinds("S=1/2", 4)) == 4
+@test all(s -> "S=1/2" in tags(s), siteinds("S=1/2", 4))
+````
+
+States and operators as ITensors
+
+````julia
+s = Index(2, "S=1/2")
+@test val(s, "Up") == 1
+@test val(s, "Dn") == 2
+@test state("Up", s) == ITensor([1, 0], (s,))
+@test state("Dn", s) == ITensor([0, 1], (s,))
+@test op("X", s) == ITensor([0 1; 1 0], (s', s))
+@test op("Z", s) == ITensor([1 0; 0 -1], (s', s))
+````
 
 ---
 
