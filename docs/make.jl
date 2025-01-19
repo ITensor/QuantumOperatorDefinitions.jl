@@ -2,7 +2,10 @@ using ITensorQuantumOperatorDefinitions: ITensorQuantumOperatorDefinitions
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
 DocMeta.setdocmeta!(
-  ITensorQuantumOperatorDefinitions, :DocTestSetup, :(using ITensorQuantumOperatorDefinitions); recursive=true
+  ITensorQuantumOperatorDefinitions,
+  :DocTestSetup,
+  :(using ITensorQuantumOperatorDefinitions);
+  recursive=true,
 )
 
 include("make_index.jl")
@@ -20,5 +23,7 @@ makedocs(;
 )
 
 deploydocs(;
-  repo="github.com/ITensor/ITensorQuantumOperatorDefinitions.jl", devbranch="main", push_preview=true
+  repo="github.com/ITensor/ITensorQuantumOperatorDefinitions.jl",
+  devbranch="main",
+  push_preview=true,
 )

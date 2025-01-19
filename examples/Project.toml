@@ -1,2 +1,3 @@
 [deps]
+ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
 ITensorQuantumOperatorDefinitions = "fd9b415b-e710-4e2a-b407-cba023081494"
