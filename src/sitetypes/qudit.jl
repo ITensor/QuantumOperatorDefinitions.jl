@@ -28,12 +28,12 @@ function val(::ValName{N}, ::SiteType"Qudit") where {N}
   return parse(Int, String(N)) + 1
 end
 
-function state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
-  n = parse(Int, String(N))
-  st = zeros(dim(s))
-  st[n + 1] = 1.0
-  return itensor(st, s)
-end
+## function state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
+##   n = parse(Int, String(N))
+##   st = zeros(dim(s))
+##   st[n + 1] = 1.0
+##   return itensor(st, s)
+## end
 
 # one-body operators
 function op(::OpName"Id", ::SiteType"Qudit", ds::Int...)
@@ -88,13 +88,13 @@ function op(::OpName"a†b†", st::SiteType"Qudit", d1::Int, d2::Int)
   return kron(op(OpName("a†"), st, d1), op(OpName("a†"), st, d2))
 end
 
-# interface
-function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs...)
-  rs = reverse((s1, s_tail...))
-  ds = dim.(rs)
-  opmat = op(on, st, ds...; kwargs...)
-  return itensor(opmat, prime.(rs)..., dag.(rs)...)
-end
+## # interface
+## function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs...)
+##   rs = reverse((s1, s_tail...))
+##   ds = dim.(rs)
+##   opmat = op(on, st, ds...; kwargs...)
+##   return itensor(opmat, prime.(rs)..., dag.(rs)...)
+## end
 
 function op(on::OpName, st::SiteType"Qudit"; kwargs...)
   return error("`op` can't be called without indices or dimensions.")
