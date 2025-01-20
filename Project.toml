@@ -1,7 +1,7 @@
 name = "ITensorQuantumOperatorDefinitions"
 uuid = "fd9b415b-e710-4e2a-b407-cba023081494"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
