@@ -1,26 +1,13 @@
 using ChainRulesCore: @non_differentiable
 
 """
-    space(::SiteType"Qudit";
-          dim = 2,
-          conserve_qns = false,
-          conserve_number = false,
-          qnname_number = "Number")
+    space(::SiteType"Qudit")
 
 Create the Hilbert space for a site of type "Qudit".
 
 Optionally specify the conserved symmetries and their quantum number labels.
 """
-function space(
-  ::SiteType"Qudit";
-  dim=2,
-  conserve_qns=false,
-  conserve_number=conserve_qns,
-  qnname_number="Number",
-)
-  if conserve_number
-    return [QN(qnname_number, n - 1) => 1 for n in 1:dim]
-  end
+function space(::SiteType"Qudit"; dim=2)
   return dim
 end
 
@@ -28,12 +15,12 @@ function val(::ValName{N}, ::SiteType"Qudit") where {N}
   return parse(Int, String(N)) + 1
 end
 
-## function state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
-##   n = parse(Int, String(N))
-##   st = zeros(dim(s))
-##   st[n + 1] = 1.0
-##   return itensor(st, s)
-## end
+function state(::StateName{N}, ::SiteType"Qudit") where {N}
+  n = parse(Int, String(N))
+  st = zeros(dim(s))
+  st[n + 1] = 1.0
+  return st
+end
 
 # one-body operators
 function op(::OpName"Id", ::SiteType"Qudit", ds::Int...)
