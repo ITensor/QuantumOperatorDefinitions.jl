@@ -1,26 +1,13 @@
 using ChainRulesCore: @non_differentiable
 
 """
-    space(::SiteType"Qudit";
-          dim = 2,
-          conserve_qns = false,
-          conserve_number = false,
-          qnname_number = "Number")
+    space(::SiteType"Qudit")
 
 Create the Hilbert space for a site of type "Qudit".
 
 Optionally specify the conserved symmetries and their quantum number labels.
 """
-function space(
-  ::SiteType"Qudit";
-  dim=2,
-  conserve_qns=false,
-  conserve_number=conserve_qns,
-  qnname_number="Number",
-)
-  if conserve_number
-    return [QN(qnname_number, n - 1) => 1 for n in 1:dim]
-  end
+function space(::SiteType"Qudit"; dim=2)
   return dim
 end
 
@@ -28,11 +15,11 @@ function val(::ValName{N}, ::SiteType"Qudit") where {N}
   return parse(Int, String(N)) + 1
 end
 
-function state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
+function state(::StateName{N}, ::SiteType"Qudit") where {N}
   n = parse(Int, String(N))
   st = zeros(dim(s))
   st[n + 1] = 1.0
-  return itensor(st, s)
+  return st
 end
 
 # one-body operators
@@ -88,13 +75,13 @@ function op(::OpName"a†b†", st::SiteType"Qudit", d1::Int, d2::Int)
   return kron(op(OpName("a†"), st, d1), op(OpName("a†"), st, d2))
 end
 
-# interface
-function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs...)
-  rs = reverse((s1, s_tail...))
-  ds = dim.(rs)
-  opmat = op(on, st, ds...; kwargs...)
-  return itensor(opmat, prime.(rs)..., dag.(rs)...)
-end
+## # interface
+## function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs...)
+##   rs = reverse((s1, s_tail...))
+##   ds = dim.(rs)
+##   opmat = op(on, st, ds...; kwargs...)
+##   return itensor(opmat, prime.(rs)..., dag.(rs)...)
+## end
 
 function op(on::OpName, st::SiteType"Qudit"; kwargs...)
   return error("`op` can't be called without indices or dimensions.")

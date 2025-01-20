@@ -143,8 +143,8 @@ space(st::SiteType"SpinOne"; kwargs...) = space(alias(st); kwargs...)
 state(name::StateName, st::SiteType"SpinOne") = state(name, alias(st))
 val(name::ValName, st::SiteType"SpinOne") = val(name, alias(st))
 
-function op!(Op::ITensor, o::OpName, st::SiteType"SpinOne", s::Index)
-  return op!(Op, o, alias(st), s)
-end
+## function op!(Op::ITensor, o::OpName, st::SiteType"SpinOne", s::Index)
+##   return op!(Op, o, alias(st), s)
+## end
 
 op(o::OpName, st::SiteType"SpinOne") = op(o, alias(st))

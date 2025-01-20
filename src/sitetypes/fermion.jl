@@ -1,4 +1,3 @@
-
 """
     space(::SiteType"Fermion";
           conserve_qns=false,
@@ -69,34 +68,34 @@ state(::StateName"Occ", ::SiteType"Fermion") = [0.0 1.0]
 state(::StateName"0", st::SiteType"Fermion") = state(StateName("Emp"), st)
 state(::StateName"1", st::SiteType"Fermion") = state(StateName("Occ"), st)
 
-function op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
-  return Op[s' => 2, s => 2] = 1.0
-end
-function op!(Op::ITensor, on::OpName"n", st::SiteType"Fermion", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function op!(Op::ITensor, ::OpName"C", ::SiteType"Fermion", s::Index)
-  return Op[s' => 1, s => 2] = 1.0
-end
-function op!(Op::ITensor, on::OpName"c", st::SiteType"Fermion", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function op!(Op::ITensor, ::OpName"Cdag", ::SiteType"Fermion", s::Index)
-  return Op[s' => 2, s => 1] = 1.0
-end
-function op!(Op::ITensor, on::OpName"c†", st::SiteType"Fermion", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-function op!(Op::ITensor, on::OpName"cdag", st::SiteType"Fermion", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
-  Op[s' => 1, s => 1] = +1.0
-  return Op[s' => 2, s => 2] = -1.0
-end
+## function op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
+##   return Op[s' => 2, s => 2] = 1.0
+## end
+## function op!(Op::ITensor, on::OpName"n", st::SiteType"Fermion", s::Index)
+##   return op!(Op, alias(on), st, s)
+## end
+## 
+## function op!(Op::ITensor, ::OpName"C", ::SiteType"Fermion", s::Index)
+##   return Op[s' => 1, s => 2] = 1.0
+## end
+## function op!(Op::ITensor, on::OpName"c", st::SiteType"Fermion", s::Index)
+##   return op!(Op, alias(on), st, s)
+## end
+## 
+## function op!(Op::ITensor, ::OpName"Cdag", ::SiteType"Fermion", s::Index)
+##   return Op[s' => 2, s => 1] = 1.0
+## end
+## function op!(Op::ITensor, on::OpName"c†", st::SiteType"Fermion", s::Index)
+##   return op!(Op, alias(on), st, s)
+## end
+## function op!(Op::ITensor, on::OpName"cdag", st::SiteType"Fermion", s::Index)
+##   return op!(Op, alias(on), st, s)
+## end
+## 
+## function op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
+##   Op[s' => 1, s => 1] = +1.0
+##   return Op[s' => 2, s => 2] = -1.0
+## end
 
 has_fermion_string(::OpName"C", ::SiteType"Fermion") = true
 function has_fermion_string(on::OpName"c", st::SiteType"Fermion")

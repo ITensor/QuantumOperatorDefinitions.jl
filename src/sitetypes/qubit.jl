@@ -7,35 +7,11 @@
 # defaults for QN names
 
 """
-    space(::SiteType"Qubit";
-          conserve_qns = false,
-          conserve_parity = conserve_qns,
-          conserve_number = false,
-          qnname_parity = "Parity",
-          qnname_number = "Number")
+    space(::SiteType"Qubit")
 
 Create the Hilbert space for a site of type "Qubit".
-
-Optionally specify the conserved symmetries and their quantum number labels.
 """
-function space(
-  ::SiteType"Qubit";
-  conserve_qns=false,
-  conserve_parity=conserve_qns,
-  conserve_number=false,
-  qnname_parity="Parity",
-  qnname_number="Number",
-)
-  if conserve_number && conserve_parity
-    return [
-      QN((qnname_number, 0), (qnname_parity, 0, 2)) => 1,
-      QN((qnname_number, 1), (qnname_parity, 1, 2)) => 1,
-    ]
-  elseif conserve_number
-    return [QN(qnname_number, 0) => 1, QN(qnname_number, 1) => 1]
-  elseif conserve_parity
-    return [QN(qnname_parity, 0, 2) => 1, QN(qnname_parity, 1, 2) => 1]
-  end
+function space(::SiteType"Qubit")
   return 2
 end
 
