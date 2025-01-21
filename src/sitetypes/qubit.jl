@@ -1,276 +1,148 @@
-#
-# Qubit site type
-#
+using LinearAlgebra: I
 
-# Define Qubit space in terms of
-# Qubit/2 space, but use different
-# defaults for QN names
+# Qubit
+Base.length(::SiteType"Qubit") = 2
 
-"""
-    space(::SiteType"Qubit")
-
-Create the Hilbert space for a site of type "Qubit".
-"""
-function space(::SiteType"Qubit")
-  return 2
-end
-
-val(::ValName"0", ::SiteType"Qubit") = 1
-val(::ValName"1", ::SiteType"Qubit") = 2
-val(::ValName"Up", ::SiteType"Qubit") = 1
-val(::ValName"Dn", ::SiteType"Qubit") = 2
-val(::ValName"↑", ::SiteType"Qubit") = 1
-val(::ValName"↓", ::SiteType"Qubit") = 2
-
-state(::StateName"0", ::SiteType"Qubit") = [1.0, 0.0]
-state(::StateName"1", ::SiteType"Qubit") = [0.0, 1.0]
-state(::StateName"+", ::SiteType"Qubit") = [1.0, 1.0] / √2
-state(::StateName"-", ::SiteType"Qubit") = [1.0, -1.0] / √2
-state(::StateName"i", ::SiteType"Qubit") = [1.0, im] / √2
-state(::StateName"-i", ::SiteType"Qubit") = [1.0, -im] / √2
-state(::StateName"Up", t::SiteType"Qubit") = state(StateName("0"), t)
-state(::StateName"Dn", t::SiteType"Qubit") = state(StateName("1"), t)
-state(::StateName"↑", t::SiteType"Qubit") = state(StateName("0"), t)
-state(::StateName"↓", t::SiteType"Qubit") = state(StateName("1"), t)
-
-# Pauli eingenstates
-state(::StateName"X+", t::SiteType"Qubit") = state(StateName("+"), t)
-state(::StateName"Xp", t::SiteType"Qubit") = state(StateName("+"), t)
-state(::StateName"X-", t::SiteType"Qubit") = state(StateName("-"), t)
-state(::StateName"Xm", t::SiteType"Qubit") = state(StateName("-"), t)
-
-state(::StateName"Y+", t::SiteType"Qubit") = state(StateName("i"), t)
-state(::StateName"Yp", t::SiteType"Qubit") = state(StateName("i"), t)
-state(::StateName"Y-", t::SiteType"Qubit") = state(StateName("-i"), t)
-state(::StateName"Ym", t::SiteType"Qubit") = state(StateName("-i"), t)
-
-state(::StateName"Z+", t::SiteType"Qubit") = state(StateName("0"), t)
-state(::StateName"Zp", t::SiteType"Qubit") = state(StateName("0"), t)
-state(::StateName"Z-", t::SiteType"Qubit") = state(StateName("1"), t)
-state(::StateName"Zm", t::SiteType"Qubit") = state(StateName("1"), t)
+Base.AbstractArray(::StateName"0", ::Tuple{SiteType"Qubit"}) = [1, 0]
+Base.AbstractArray(::StateName"1", ::Tuple{SiteType"Qubit"}) = [0, 1]
+Base.AbstractArray(::StateName"+", ::Tuple{SiteType"Qubit"}) = [1, 1] / √2
+Base.AbstractArray(::StateName"-", ::Tuple{SiteType"Qubit"}) = [1, -1] / √2
+Base.AbstractArray(::StateName"i", ::Tuple{SiteType"Qubit"}) = [1, im] / √2
+Base.AbstractArray(::StateName"-i", ::Tuple{SiteType"Qubit"}) = [1, -im] / √2
 
 # SIC-POVMs
-state(::StateName"Tetra1", t::SiteType"Qubit") = state(StateName("Z+"), t)
-state(::StateName"Tetra2", t::SiteType"Qubit") = [
+Base.AbstractArray(::StateName"Tetra2", ::Tuple{SiteType"Qubit"}) = [
   1 / √3
   √2 / √3
 ]
-state(::StateName"Tetra3", t::SiteType"Qubit") = [
-  1 / √3
-  √2 / √3 * exp(im * 2π / 3)
-]
-state(::StateName"Tetra4", t::SiteType"Qubit") = [
-  1 / √3
-  √2 / √3 * exp(im * 4π / 3)
-]
-
-op(::OpName"Id", ::SiteType"Qubit") = [
-  1 0
-  0 1
-]
+function Base.AbstractArray(::StateName"Tetra3", ::Tuple{SiteType"Qubit"})
+  return [
+    1 / √3
+    √2 / √3 * exp(im * 2π / 3)
+  ]
+end
+function Base.AbstractArray(::StateName"Tetra4", ::Tuple{SiteType"Qubit"})
+  return [
+    1 / √3
+    √2 / √3 * exp(im * 4π / 3)
+  ]
+end
 
 #
 # 1-Qubit gates
 #
-op(::OpName"X", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"X", ::Tuple{SiteType"Qubit"}) = [
   0 1
   1 0
 ]
 
-op(::OpName"σx", t::SiteType"Qubit") = op("X", t)
-
-op(::OpName"σ1", t::SiteType"Qubit") = op("X", t)
-
-op(::OpName"Y", ::SiteType"Qubit") = [
-  0.0 -1.0im
-  1.0im 0.0
+Base.AbstractArray(::OpName"Y", ::Tuple{SiteType"Qubit"}) = [
+  0 -im
+  im 0
 ]
 
-op(::OpName"σy", t::SiteType"Qubit") = op("Y", t)
-
-op(::OpName"σ2", t::SiteType"Qubit") = op("Y", t)
-
-op(::OpName"iY", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"iY", ::Tuple{SiteType"Qubit"}) = [
   0 1
   -1 0
 ]
-op(::OpName"iσy", t::SiteType"Qubit") = op("iY", t)
 
-op(::OpName"iσ2", t::SiteType"Qubit") = op("iY", t)
-
-op(::OpName"Z", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"Z", ::Tuple{SiteType"Qubit"}) = [
   1 0
   0 -1
 ]
 
-op(::OpName"σz", t::SiteType"Qubit") = op("Z", t)
-
-op(::OpName"σ3", t::SiteType"Qubit") = op("Z", t)
-
-function op(::OpName"√NOT", ::SiteType"Qubit")
+function Base.AbstractArray(::OpName"√NOT", ::Tuple{SiteType"Qubit"})
   return [
     (1 + im)/2 (1 - im)/2
     (1 - im)/2 (1 + im)/2
   ]
 end
 
-op(::OpName"√X", t::SiteType"Qubit") = op("√NOT", t)
-
-op(::OpName"H", ::SiteType"Qubit") = [
-  1/sqrt(2) 1/sqrt(2)
-  1/sqrt(2) -1/sqrt(2)
+Base.AbstractArray(::OpName"H", ::Tuple{SiteType"Qubit"}) = [
+  1/√2 1/√2
+  1/√2 -1/√2
 ]
 
 # Rϕ with ϕ = π/2
-op(::OpName"Phase", ::SiteType"Qubit"; ϕ::Number=π / 2) = [
+Base.AbstractArray(n::OpName"Phase", ::Tuple{SiteType"Qubit"}) = [
   1 0
-  0 exp(im * ϕ)
+  0 exp(im * n.ϕ)
 ]
-
-op(::OpName"P", t::SiteType"Qubit"; kwargs...) = op("Phase", t; kwargs...)
-
-op(::OpName"S", t::SiteType"Qubit") = op("Phase", t; ϕ=π / 2)
 
 ## Rϕ with ϕ = π/4
-op(::OpName"π/8", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"π/8", ::Tuple{SiteType"Qubit"}) = [
   1 0
-  0 1 / sqrt(2)+im / sqrt(2)
+  0 1 / √2+im / √2
 ]
 
-op(::OpName"T", t::SiteType"Qubit") = op("π/8", t)
-
 # Rotation around X-axis
-function op(::OpName"Rx", ::SiteType"Qubit"; θ::Number)
+function Base.AbstractArray(n::OpName"Rx", ::Tuple{SiteType"Qubit"})
   return [
-    cos(θ / 2) -im*sin(θ / 2)
-    -im*sin(θ / 2) cos(θ / 2)
+    cos(n.θ / 2) -im*sin(n.θ / 2)
+    -im*sin(n.θ / 2) cos(n.θ / 2)
   ]
 end
 
 # Rotation around Y-axis
-function op(::OpName"Ry", ::SiteType"Qubit"; θ::Number)
+function Base.AbstractArray(n::OpName"Ry", ::Tuple{SiteType"Qubit"})
   return [
-    cos(θ / 2) -sin(θ / 2)
-    sin(θ / 2) cos(θ / 2)
+    cos(n.θ / 2) -sin(n.θ / 2)
+    sin(n.θ / 2) cos(n.θ / 2)
   ]
 end
 
 # Rotation around Z-axis
-function op(::OpName"Rz", ::SiteType"Qubit"; θ=nothing, ϕ=nothing)
-  isone(count(isnothing, (θ, ϕ))) || error(
-    "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating an Rz gate, but not both.",
-  )
-  isnothing(θ) && (θ = ϕ)
+function Base.AbstractArray(n::OpName"Rz", ::Tuple{SiteType"Qubit"})
   return [
-    exp(-im * θ / 2) 0
-    0 exp(im * θ / 2)
+    exp(-im * n.θ / 2) 0
+    0 exp(im * n.θ / 2)
   ]
 end
 
 # Rotation around generic axis n̂
-function op(::OpName"Rn", ::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)
+function Base.AbstractArray(n::OpName"Rn", ::Tuple{SiteType"Qubit"})
   return [
-    cos(θ / 2) -exp(im * λ)*sin(θ / 2)
-    exp(im * ϕ)*sin(θ / 2) exp(im * (ϕ + λ))*cos(θ / 2)
+    cos(n.θ / 2) -exp(im * n.λ)*sin(n.θ / 2)
+    exp(im * n.ϕ)*sin(n.θ / 2) exp(im * (n.ϕ + n.λ))*cos(n.θ / 2)
   ]
-end
-
-function op(on::OpName"Rn̂", t::SiteType"Qubit"; kwargs...)
-  return op(alias(on), t; kwargs...)
 end
 
 #
 # 2-Qubit gates
 #
+function Base.AbstractArray(n::OpName"Control", ts::Tuple{Vararg{SiteType"Qubit"}})
+  # Number of target qubits.
+  nt = nsites(n.op)
+  # Number of control qubits.
+  nc = get(params(n), :ncontrol, length(ts) - nt)
+  @assert length(ts) == nc + nt
+  return [
+    I(2^nc) falses(2^nc, 2^nt)
+    falses(2^nt, 2^nc) AbstractArray(n.op, ts[(nc + 1):end])
+  ]
+end
 
-op(::OpName"CNOT", ::SiteType"Qubit") = [
-  1 0 0 0
-  0 1 0 0
-  0 0 0 1
-  0 0 1 0
-]
-
-op(::OpName"CX", t::SiteType"Qubit") = op("CNOT", t)
-
-op(::OpName"CY", ::SiteType"Qubit") = [
-  1 0 0 0
-  0 1 0 0
-  0 0 0 -im
-  0 0 im 0
-]
-
-op(::OpName"CZ", ::SiteType"Qubit") = [
-  1 0 0 0
-  0 1 0 0
-  0 0 1 0
-  0 0 0 -1
-]
-
-function op(::OpName"CPHASE", ::SiteType"Qubit"; ϕ::Number)
+# TODO: Define as `::OpName"OpSWAP"(; op=OpName"X"())`.
+function Base.AbstractArray(::OpName"SWAP", ::Tuple{SiteType"Qubit"})
   return [
     1 0 0 0
-    0 1 0 0
     0 0 1 0
-    0 0 0 exp(im * ϕ)
-  ]
-end
-op(::OpName"Cphase", t::SiteType"Qubit"; kwargs...) = op("CPHASE", t; kwargs...)
-
-function op(::OpName"CRx", ::SiteType"Qubit"; θ::Number)
-  return [
-    1 0 0 0
     0 1 0 0
-    0 0 cos(θ / 2) -im*sin(θ / 2)
-    0 0 -im*sin(θ / 2) cos(θ / 2)
+    0 0 0 1
   ]
 end
-op(::OpName"CRX", t::SiteType"Qubit"; kwargs...) = op("CRx", t; kwargs...)
-
-function op(::OpName"CRy", ::SiteType"Qubit"; θ::Number)
-  return [
-    1 0 0 0
-    0 1 0 0
-    0 0 cos(θ / 2) -sin(θ / 2)
-    0 0 sin(θ / 2) cos(θ / 2)
-  ]
-end
-op(::OpName"CRY", t::SiteType"Qubit"; kwargs...) = op("CRy", t; kwargs...)
-
-function op(::OpName"CRz", ::SiteType"Qubit"; ϕ=nothing, θ=nothing)
-  isone(count(isnothing, (θ, ϕ))) || error(
-    "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating a CRz gate, but not both.",
-  )
-  isnothing(θ) && (θ = ϕ)
-  return [
-    1 0 0 0
-    0 1 0 0
-    0 0 exp(-im * θ / 2) 0
-    0 0 0 exp(im * θ / 2)
-  ]
-end
-op(::OpName"CRZ", t::SiteType"Qubit"; kwargs...) = op("CRz", t; kwargs...)
-
-function op(::OpName"CRn", ::SiteType"Qubit"; θ::Number, ϕ::Number, λ::Number)
-  return [
-    1 0 0 0
-    0 1 0 0
-    0 0 cos(θ / 2) -exp(im * λ)*sin(θ / 2)
-    0 0 exp(im * ϕ)*sin(θ / 2) exp(im * (ϕ + λ))*cos(θ / 2)
-  ]
-end
-function op(::OpName"CRn̂", t::SiteType"Qubit"; kwargs...)
-  return op("CRn", t; kwargs...)
+function Base.AbstractArray(::OpName"Swap", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray("SWAP", t)
 end
 
-op(::OpName"SWAP", ::SiteType"Qubit") = [
-  1 0 0 0
-  0 0 1 0
-  0 1 0 0
-  0 0 0 1
-]
-op(::OpName"Swap", t::SiteType"Qubit") = op("SWAP", t)
+# TODO: Use this to define `√X`, etc.
+function Base.AbstractArray(n::OpName"√", ts::Tuple{Vararg{SiteType}})
+  return √(AbstractArray(n.op, ts))
+end
 
-function op(::OpName"√SWAP", ::SiteType"Qubit")
+# TODO: Define as `alias(::OpName"√SWAP") = OpName"√"(; op=OpName"SWAP")`.
+# TODO: Define as `::OpName"OpSWAP"(; op=OpName"√X"())`.
+function Base.AbstractArray(::OpName"√SWAP", ::Tuple{SiteType"Qubit"})
   return [
     1 0 0 0
     0 (1 + im)/2 (1 - im)/2 0
@@ -278,17 +150,24 @@ function op(::OpName"√SWAP", ::SiteType"Qubit")
     0 0 0 1
   ]
 end
-op(::OpName"√Swap", t::SiteType"Qubit") = op("√SWAP", t)
+function Base.AbstractArray(::OpName"√Swap", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray("√SWAP", t)
+end
 
-op(::OpName"iSWAP", t::SiteType"Qubit") = [
-  1 0 0 0
-  0 0 im 0
-  0 im 0 0
-  0 0 0 1
-]
-op(::OpName"iSwap", t::SiteType"Qubit") = op("iSWAP", t)
+# TODO: Define as `::OpName"OpSWAP"(; op=OpName"iX"())`.
+function Base.AbstractArray(::OpName"iSWAP", t::Tuple{SiteType"Qubit"})
+  return [
+    1 0 0 0
+    0 0 im 0
+    0 im 0 0
+    0 0 0 1
+  ]
+end
+function Base.AbstractArray(::OpName"iSwap", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray("iSWAP", t)
+end
 
-function op(::OpName"√iSWAP", t::SiteType"Qubit")
+function Base.AbstractArray(::OpName"√iSWAP", t::Tuple{SiteType"Qubit"})
   return [
     1 0 0 0
     0 1/√2 im/√2 0
@@ -296,10 +175,12 @@ function op(::OpName"√iSWAP", t::SiteType"Qubit")
     0 0 0 1
   ]
 end
-op(::OpName"√iSwap", t::SiteType"Qubit") = op("√iSWAP", t)
+function Base.AbstractArray(::OpName"√iSwap", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray("√iSWAP", t)
+end
 
 # Ising (XX) coupling gate
-function op(::OpName"Rxx", t::SiteType"Qubit"; ϕ::Number)
+function Base.AbstractArray(::OpName"Rxx", t::Tuple{SiteType"Qubit"}; ϕ::Number)
   return [
     cos(ϕ) 0 0 -im*sin(ϕ)
     0 cos(ϕ) -im*sin(ϕ) 0
@@ -307,10 +188,12 @@ function op(::OpName"Rxx", t::SiteType"Qubit"; ϕ::Number)
     -im*sin(ϕ) 0 0 cos(ϕ)
   ]
 end
-op(::OpName"RXX", t::SiteType"Qubit"; kwargs...) = op("Rxx", t; kwargs...)
+function Base.AbstractArray(::OpName"RXX", t::Tuple{SiteType"Qubit"}; kwargs...)
+  return Base.AbstractArray("Rxx", t; kwargs...)
+end
 
 # Ising (YY) coupling gate
-function op(::OpName"Ryy", ::SiteType"Qubit"; ϕ::Number)
+function Base.AbstractArray(::OpName"Ryy", ::Tuple{SiteType"Qubit"}; ϕ::Number)
   return [
     cos(ϕ) 0 0 im*sin(ϕ)
     0 cos(ϕ) -im*sin(ϕ) 0
@@ -318,10 +201,12 @@ function op(::OpName"Ryy", ::SiteType"Qubit"; ϕ::Number)
     im*sin(ϕ) 0 0 cos(ϕ)
   ]
 end
-op(::OpName"RYY", t::SiteType"Qubit"; kwargs...) = op("Ryy", t; kwargs...)
+function Base.AbstractArray(::OpName"RYY", t::Tuple{SiteType"Qubit"}; kwargs...)
+  return Base.AbstractArray("Ryy", t; kwargs...)
+end
 
 # Ising (XY) coupling gate
-function op(::OpName"Rxy", t::SiteType"Qubit"; ϕ::Number)
+function Base.AbstractArray(::OpName"Rxy", t::Tuple{SiteType"Qubit"}; ϕ::Number)
   return [
     1 0 0 0
     0 cos(ϕ) -im*sin(ϕ) 0
@@ -329,10 +214,12 @@ function op(::OpName"Rxy", t::SiteType"Qubit"; ϕ::Number)
     0 0 0 1
   ]
 end
-op(::OpName"RXY", t::SiteType"Qubit"; kwargs...) = op("Rxy", t; kwargs...)
+function Base.AbstractArray(::OpName"RXY", t::Tuple{SiteType"Qubit"}; kwargs...)
+  return Base.AbstractArray("Rxy", t; kwargs...)
+end
 
 # Ising (ZZ) coupling gate
-function op(::OpName"Rzz", ::SiteType"Qubit"; ϕ::Number)
+function Base.AbstractArray(::OpName"Rzz", ::Tuple{SiteType"Qubit"}; ϕ::Number)
   return [
     exp(-im * ϕ) 0 0 0
     0 exp(im * ϕ) 0 0
@@ -340,13 +227,16 @@ function op(::OpName"Rzz", ::SiteType"Qubit"; ϕ::Number)
     0 0 0 exp(-im * ϕ)
   ]
 end
-op(::OpName"RZZ", t::SiteType"Qubit"; kwargs...) = op("Rzz", t; kwargs...)
+function Base.AbstractArray(::OpName"RZZ", t::Tuple{SiteType"Qubit"}; kwargs...)
+  return Base.AbstractArray("Rzz", t; kwargs...)
+end
 
 #
 # 3-Qubit gates
 #
 
-function op(::OpName"Toffoli", ::SiteType"Qubit")
+# TODO: Define in terms of `Control`.
+function Base.AbstractArray(::OpName"Toffoli", ::Tuple{Vararg{SiteType"Qubit",3}})
   return [
     1 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0
@@ -358,14 +248,12 @@ function op(::OpName"Toffoli", ::SiteType"Qubit")
     0 0 0 0 0 0 1 0
   ]
 end
+alias(::OpName"CCNOT") = OpName"Toffoli"()
+alias(::OpName"CCX") = OpName"Toffoli"()
+alias(::OpName"TOFF") = OpName"Toffoli"()
 
-op(::OpName"CCNOT", t::SiteType"Qubit") = op("Toffoli", t)
-
-op(::OpName"CCX", t::SiteType"Qubit") = op("Toffoli", t)
-
-op(::OpName"TOFF", t::SiteType"Qubit") = op("Toffoli", t)
-
-function op(::OpName"Fredkin", ::SiteType"Qubit")
+# TODO: Define in terms of `Control` and `SWAP`.
+function Base.AbstractArray(::OpName"Fredkin", ::Tuple{Vararg{SiteType"Qubit",3}})
   return [
     1 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0
@@ -377,17 +265,16 @@ function op(::OpName"Fredkin", ::SiteType"Qubit")
     0 0 0 0 0 0 0 1
   ]
 end
-
-op(::OpName"CSWAP", t::SiteType"Qubit") = op("Fredkin", t)
-op(::OpName"CSwap", t::SiteType"Qubit") = op("Fredkin", t)
-
-op(::OpName"CS", t::SiteType"Qubit") = op("Fredkin", t)
+alias(::OpName"CSWAP") = OpName"Fredkin"()
+alias(::OpName"CSwap") = OpName"Fredkin"()
+alias(::OpName"CS") = OpName"Fredkin"()
 
 #
 # 4-Qubit gates
 #
 
-function op(::OpName"CCCNOT", ::SiteType"Qubit")
+# TODO: Define in terms of `Control` and `SWAP`.
+function Base.AbstractArray(::OpName"CCCNOT", ts::Tuple{Vararg{SiteType"Qubit",4}})
   return [
     1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -409,73 +296,83 @@ function op(::OpName"CCCNOT", ::SiteType"Qubit")
 end
 
 # spin-full operators
-op(::OpName"Sz", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"Sz", ::Tuple{SiteType"Qubit"}) = [
   0.5 0.0
   0.0 -0.5
 ]
 
-op(on::OpName"Sᶻ", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"S+", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"S+", ::Tuple{SiteType"Qubit"}) = [
   0 1
   0 0
 ]
+function Base.AbstractArray(on::OpName"S⁺", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
+function Base.AbstractArray(on::OpName"Splus", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"S⁺", t::SiteType"Qubit") = op(alias(on), t)
-
-op(on::OpName"Splus", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"S-", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"S-", ::Tuple{SiteType"Qubit"}) = [
   0 0
   1 0
 ]
+function Base.AbstractArray(on::OpName"S⁻", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
+function Base.AbstractArray(on::OpName"Sminus", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"S⁻", t::SiteType"Qubit") = op(alias(on), t)
-
-op(on::OpName"Sminus", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"Sx", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"Sx", ::Tuple{SiteType"Qubit"}) = [
   0.0 0.5
   0.5 0.0
 ]
+function Base.AbstractArray(on::OpName"Sˣ", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"Sˣ", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"iSy", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"iSy", ::Tuple{SiteType"Qubit"}) = [
   0.0 0.5
   -0.5 0.0
 ]
+function Base.AbstractArray(on::OpName"iSʸ", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"iSʸ", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"Sy", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"Sy", ::Tuple{SiteType"Qubit"}) = [
   0.0 -0.5im
   0.5im 0.0
 ]
+function Base.AbstractArray(on::OpName"Sʸ", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"Sʸ", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"S2", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"S2", ::Tuple{SiteType"Qubit"}) = [
   0.75 0.0
   0.0 0.75
 ]
+function Base.AbstractArray(on::OpName"S²", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"S²", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"ProjUp", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"ProjUp", ::Tuple{SiteType"Qubit"}) = [
   1 0
   0 0
 ]
+function Base.AbstractArray(on::OpName"projUp", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
+function Base.AbstractArray(on::OpName"Proj0", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
 
-op(on::OpName"projUp", t::SiteType"Qubit") = op(alias(on), t)
-
-op(on::OpName"Proj0", t::SiteType"Qubit") = op(alias(on), t)
-
-op(::OpName"ProjDn", ::SiteType"Qubit") = [
+Base.AbstractArray(::OpName"ProjDn", ::Tuple{SiteType"Qubit"}) = [
   0 0
   0 1
 ]
-
-op(on::OpName"projDn", t::SiteType"Qubit") = op(alias(on), t)
-
-op(on::OpName"Proj1", t::SiteType"Qubit") = op(alias(on), t)
+function Base.AbstractArray(on::OpName"projDn", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end
+function Base.AbstractArray(on::OpName"Proj1", t::Tuple{SiteType"Qubit"})
+  return Base.AbstractArray(alias(on), t)
+end

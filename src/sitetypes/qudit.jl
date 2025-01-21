@@ -1,5 +1,8 @@
 using ChainRulesCore: @non_differentiable
 
+alias(t::SiteType"Qudit") = t
+Base.length(t::SiteType"Qudit") = t.length
+
 """
     space(::SiteType"Qudit")
 
@@ -75,6 +78,7 @@ function op(::OpName"a†b†", st::SiteType"Qudit", d1::Int, d2::Int)
   return kron(op(OpName("a†"), st, d1), op(OpName("a†"), st, d2))
 end
 
+## TODO: Make this logic more general.
 ## # interface
 ## function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs...)
 ##   rs = reverse((s1, s_tail...))

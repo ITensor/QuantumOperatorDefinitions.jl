@@ -37,32 +37,94 @@ julia> Pkg.add("ITensorQuantumOperatorDefinitions")
 
 # ## Examples
 
+using ITensorQuantumOperatorDefinitions: ITensorQuantumOperatorDefinitions as Ops
+
 using ITensorBase: ITensor, Index, tags
 using ITensorQuantumOperatorDefinitions:
   OpName, SiteType, StateName, ValName, op, siteind, siteinds, state, val
+using LinearAlgebra: Diagonal
 using Test: @test
 
-# States and operators as Julia arrays
-@test val(ValName("Up"), SiteType("S=1/2")) == 1
-@test val(ValName("Dn"), SiteType("S=1/2")) == 2
-@test state(StateName("Up"), SiteType("S=1/2")) == [1, 0]
-@test state(StateName("Dn"), SiteType("S=1/2")) == [0, 1]
-@test op(OpName("X"), SiteType("S=1/2")) == [0 1; 1 0]
-@test op(OpName("Z"), SiteType("S=1/2")) == [1 0; 0 -1]
+@test length(SiteType("Qubit")) == 2
+@test size(SiteType("Qubit")) == (2,)
+@test size(SiteType("Qubit"), 1) == 2
+@test axes(SiteType("Qubit")) == (Base.OneTo(2),)
+@test axes(SiteType("Qubit"), 1) == Base.OneTo(2)
 
-# Index constructors
-@test siteind("S=1/2") isa Index
-@test Int(length(siteind("S=1/2"))) == 2
-@test "S=1/2" in tags(siteind("S=1/2"))
-@test siteinds("S=1/2", 4) isa Vector{<:Index}
-@test length(siteinds("S=1/2", 4)) == 4
-@test all(s -> "S=1/2" in tags(s), siteinds("S=1/2", 4))
+# TODO: Delete.
+## @test Integer(StateName("0"), SiteType("Qubit")) === 1
+## @test Integer(StateName("0")) == 1
+## @test Integer(StateName("1"), SiteType("Qubit")) === 2
+## @test Integer(StateName("1")) == 2
+## @test Int(StateName("0"), SiteType("Qubit")) === 1
+## @test Int(StateName("1"), SiteType("Qubit")) === 2
+## @test Int32(StateName("0"), SiteType("Qubit")) === Int32(1)
+## @test Int32(StateName("1"), SiteType("Qubit")) === Int32(2)
+## 
+## @test Integer(StateName("Up"), SiteType("Qubit")) === 1
+## @test Integer(StateName("Dn"), SiteType("Qubit")) === 2
+## @test Int(StateName("Up"), SiteType("Qubit")) === 1
+## @test Int(StateName("Dn"), SiteType("Qubit")) === 2
+## @test Int32(StateName("Up"), SiteType("Qubit")) === Int32(1)
+## @test Int32(StateName("Dn"), SiteType("Qubit")) === Int32(2)
 
-# States and operators as ITensors
-s = Index(2, "S=1/2")
-@test val(s, "Up") == 1
-@test val(s, "Dn") == 2
-@test state("Up", s) == ITensor([1, 0], (s,))
-@test state("Dn", s) == ITensor([0, 1], (s,))
-@test op("X", s) == ITensor([0 1; 1 0], (s', s))
-@test op("Z", s) == ITensor([1 0; 0 -1], (s', s))
+@test AbstractArray(StateName("0"), SiteType("Qubit")) == [1, 0]
+@test AbstractArray(StateName("1"), SiteType("Qubit")) == [0, 1]
+@test AbstractArray{Float32}(StateName("0"), SiteType("Qubit")) == Float32[1, 0]
+@test AbstractArray{Float32}(StateName("1"), SiteType("Qubit")) == Float32[0, 1]
+@test Vector{Float32}(StateName("0"), SiteType("Qubit")) == Float32[1, 0]
+@test Vector{Float32}(StateName("1"), SiteType("Qubit")) == Float32[0, 1]
+
+@test AbstractArray(StateName("Up"), SiteType("Qubit")) == [1, 0]
+@test AbstractArray(StateName("Dn"), SiteType("Qubit")) == [0, 1]
+
+@test Matrix(OpName("X"), SiteType("Qubit")) == [0 1; 1 0]
+@test Matrix(OpName("σx"), SiteType("Qubit")) == [0 1; 1 0]
+@test Matrix(OpName("σ1"), SiteType("Qubit")) == [0 1; 1 0]
+@test Matrix(OpName("Z"), SiteType("Qubit")) == [1 0; 0 -1]
+
+@test Matrix(OpName("Rx"; θ=π), SiteType("Qubit")) ≈ [0 -im; -im 0]
+
+## TODO: Delete.
+##@test Matrix(OpName("Rx"; θ=π)) ≈ [0 -im; -im 0]
+
+@test Array{<:Any,4}(OpName("CNOT"), (SiteType("Qubit"), SiteType("Qubit"))) ==
+  [1; 0;; 0; 0;;; 0; 1;; 0; 0;;;; 0; 0;; 0; 1;;; 0; 0;; 1; 0]
+
+# TODO: Support:
+# `AbstractArray(OpName("CNOT"), (2, 2))`?
+
+@test Array(OpName("CNOT"), (SiteType("Qubit"), SiteType("Qubit"))) ==
+  [1 0 0 0; 0 1 0 0; 0 0 0 1; 0 0 1 0]
+
+# TODO: Should we allow this?
+# @test Array(OpName("CNOT"), (SiteType("Qubit"), SiteType("Qudit"; length=2))) == [1 0 0 0; 0 1 0 0; 0 0 0 1; 0 0 1 0]
+
+@test AbstractArray(OpName("I"), SiteType("Qudit"; length=4)) == Diagonal(trues(4))
+@test AbstractArray(OpName("Id"), SiteType("Qudit"; length=4)) == Diagonal(trues(4))
+
+@test siteind("Qubit") isa Index
+@test Int(length(siteind("Qubit"))) == 2
+@test "Qubit" in tags(siteind("Qubit"))
+@test siteinds("Qubit", 4) isa Vector{<:Index}
+@test length(siteinds("Qubit", 4)) == 4
+@test all(s -> "Qubit" in tags(s), siteinds("Qubit", 4))
+
+s1, s2 = Index.((2, 2), "Qubit")
+# TODO: Define.
+## @test ITensor(OpName("Rx"; θ=π), s1) ≈ ITensor([0 -im; -im 0], (s1', s1))
+# Specify just the domain.
+## ITensor(OpName("CNOT"), (s1, s2))
+# TODO: Allow specifying codomain and domain.
+# ITensor(OpName("CNOT"), (s1', s2'), dag.((s1, s2)))
+# TODO: Allow specifying the array type.
+# ITensor(Array{Float32}, OpName("CNOT"), (s1', s2'), dag.((s1, s2)))
+# TODO: Allow specifying the eltype.
+# ITensor(Float32, OpName("CNOT"), (s1', s2'), dag.((s1, s2)))
+
+## @test val(s, "Up") == 1
+## @test val(s, "Dn") == 2
+## @test state("Up", s) == ITensor([1, 0], (s,))
+## @test state("Dn", s) == ITensor([0, 1], (s,))
+## @test op("X", s) == ITensor([0 1; 1 0], (s', s))
+## @test op("Z", s) == ITensor([1 0; 0 -1], (s', s))

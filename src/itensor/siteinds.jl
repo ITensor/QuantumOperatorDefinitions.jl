@@ -1,7 +1,8 @@
 using ITensorBase: Index, addtags
 
-function siteind(st::SiteType; addtags="", kwargs...)
-  sp = space(st; kwargs...)
+function siteind(st::SiteType; addtags="")
+  # TODO: Generalize to ranges, QNs.
+  sp = length(st)
   isnothing(sp) && return nothing
   return Index(sp, "Site, $(value(st)), $addtags")
 end

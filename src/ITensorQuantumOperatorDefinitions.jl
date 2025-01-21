@@ -7,6 +7,7 @@ include("state.jl")
 include("op.jl")
 include("has_fermion_string.jl")
 
+include("sitetypes/generic.jl")
 include("sitetypes/aliases.jl")
 include("sitetypes/generic_sites.jl")
 include("sitetypes/qubit.jl")
