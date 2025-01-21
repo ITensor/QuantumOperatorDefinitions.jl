@@ -84,7 +84,12 @@ alias(n::OpName"iSy") = OpName("iY") / 2
 @op_alias "iSʸ" "iSy"
 alias(n::OpName"Sz") = OpName("Z") / 2
 @op_alias "Sᶻ" "Sz"
-
+@op_alias "S⁻" "S-"
+@op_alias "Sminus" "S-"
+@op_alias "Sm" "S-"
+@op_alias "S⁺" "S+"
+@op_alias "Splus" "S+"
+@op_alias "Sp" "S+"
 alias(n::OpName"S2") = 3 * OpName("I") / 4
 @op_alias "S²" "S2"
 
@@ -112,6 +117,7 @@ end
 @op_alias "√NOT" "√" op = OpName"X"()
 @op_alias "PHASE" "Phase"
 @op_alias "P" "Phase"
+@op_alias "Rn̂" "Rn"
 
 @op_alias "CNOT" "Control" op = OpName"X"()
 @op_alias "CX" "Control" op = OpName"X"()
@@ -197,21 +203,3 @@ end
 @op_alias "ntot" "Ntot"
 @op_alias "F↑" "Fup"
 @op_alias "F↓" "Fdn"
-
-@op_alias "S²" "S2"
-@op_alias "Sᶻ" "Sz"
-@op_alias "Sʸ" "Sy"
-@op_alias "iSʸ" "iSy"
-@op_alias "Sˣ" "Sx"
-@op_alias "S⁻" "S-"
-@op_alias "Sminus" "S-"
-@op_alias "Sm" "S-"
-@op_alias "S⁺" "S+"
-@op_alias "Splus" "S+"
-@op_alias "Sp" "S+"
-@op_alias "projUp" "ProjUp"
-@op_alias "projDn" "ProjDn"
-
-@op_alias "Proj0" "ProjUp"
-@op_alias "Proj1" "ProjDn"
-@op_alias "Rn̂" "Rn"
