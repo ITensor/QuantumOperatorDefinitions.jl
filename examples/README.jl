@@ -41,7 +41,7 @@ using ITensorQuantumOperatorDefinitions: ITensorQuantumOperatorDefinitions as Op
 
 using ITensorBase: ITensor, Index, tags
 using ITensorQuantumOperatorDefinitions:
-  OpName, SiteType, StateName, ValName, op, siteind, siteinds, state, val
+  OpName, SiteType, StateName, ⊗, controlled, expand, op, siteind, siteinds, state
 using LinearAlgebra: Diagonal
 using Test: @test
 
@@ -103,12 +103,41 @@ using Test: @test
 @test AbstractArray(OpName("I"), SiteType("Qudit"; length=4)) == Diagonal(trues(4))
 @test AbstractArray(OpName("Id"), SiteType("Qudit"; length=4)) == Diagonal(trues(4))
 
+@test Matrix(exp(-im * π / 4 * kron(OpName("X"), OpName("X")))) ≈
+  Matrix(OpName("RXX"; θ=π / 2))
+@test Matrix(exp(-im * π / 4 * kron(OpName("Y"), OpName("Y")))) ≈
+  Matrix(OpName("RYY"; θ=π / 2))
+@test Matrix(exp(-im * π / 4 * kron(OpName("Z"), OpName("Z")))) ≈
+  Matrix(OpName("RZZ"; θ=π / 2))
+
+# TODO: This is broken, investigate.
+# @test Matrix(exp(-im * π/4 * kron(OpName("X"), OpName("Y")))) ≈ Matrix(OpName("RXY"; θ=π/2))
+
 @test siteind("Qubit") isa Index
 @test Int(length(siteind("Qubit"))) == 2
 @test "Qubit" in tags(siteind("Qubit"))
 @test siteinds("Qubit", 4) isa Vector{<:Index}
 @test length(siteinds("Qubit", 4)) == 4
 @test all(s -> "Qubit" in tags(s), siteinds("Qubit", 4))
+
+I, X, Y, Z = OpName.(("I", "X", "Y", "Z"))
+paulis = (I, X, Y, Z)
+
+M = randn(ComplexF64, (2, 2))
+c = expand(M, Matrix.(paulis))
+M′ = Matrix(sum(c .* paulis))
+@test M ≈ M′
+
+paulis2 = vec(splat(kron).(Iterators.product(paulis, paulis)))
+M2 = randn(ComplexF64, (4, 4))
+c2 = expand(M2, Matrix.(paulis2))
+M2′ = Matrix(sum(c2 .* paulis2))
+@test M2 ≈ M2′
+
+@test AbstractArray(I, (SiteType("Qubit"), SiteType("Qudit"; length=3))) ==
+  Diagonal(trues(6))
+@test AbstractArray{<:Any,4}(I, (SiteType("Qubit"), SiteType("Qudit"; length=3))) ==
+  reshape(Diagonal(trues(6)), (2, 3, 2, 3))
 
 s1, s2 = Index.((2, 2), "Qubit")
 # TODO: Define.
