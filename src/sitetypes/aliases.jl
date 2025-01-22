@@ -26,8 +26,8 @@ end
 # Pauli eingenstates
 @state_alias "X+" "+"
 @state_alias "Xp" "+"
-@state_alias "X-" "+"
-@state_alias "Xm" "+"
+@state_alias "X-" "-"
+@state_alias "Xm" "-"
 
 @state_alias "Y+" "i"
 @state_alias "Yp" "i"
@@ -46,6 +46,9 @@ end
 @op_alias "σ0" "Id"
 @op_alias "σ⁰" "Id"
 @op_alias "σ₀" "Id"
+
+alias(::OpName"X") = (OpName"σ⁺"() + OpName"σ⁻"()) / 2
+alias(::OpName"Y") = -im * (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 
 @op_alias "σx" "X"
 @op_alias "σˣ" "X"
@@ -70,7 +73,7 @@ end
 @op_alias "σz" "Z"
 # TODO: No subsript `\_z` available
 # in unicode.
-@op_alias "σᶻ" "Z"
+@op_alias "Z" "σᶻ"
 @op_alias "σ3" "Z"
 @op_alias "σ³" "Z"
 @op_alias "σ₃" "Z"
@@ -84,12 +87,16 @@ alias(n::OpName"iSy") = OpName("iY") / 2
 @op_alias "iSʸ" "iSy"
 alias(n::OpName"Sz") = OpName("Z") / 2
 @op_alias "Sᶻ" "Sz"
-@op_alias "S⁻" "S-"
+alias(::OpName"S⁻") = OpName("σ⁻") / 2
+@op_alias "S-" "S⁻"
 @op_alias "Sminus" "S-"
 @op_alias "Sm" "S-"
-@op_alias "S⁺" "S+"
+alias(::OpName"S⁺") = OpName("σ⁺") / 2
+@op_alias "S+" "S⁺"
 @op_alias "Splus" "S+"
 @op_alias "Sp" "S+"
+
+# TODO: Is this the correct general definition?
 alias(n::OpName"S2") = 3 * OpName("I") / 4
 @op_alias "S²" "S2"
 

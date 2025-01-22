@@ -2,10 +2,15 @@ using LinearAlgebra: I
 
 Base.length(::SiteType"Qubit") = 2
 
+# `eigvecs(Z)`
 Base.AbstractArray(::StateName"0", ::Tuple{SiteType"Qubit"}) = [1, 0]
 Base.AbstractArray(::StateName"1", ::Tuple{SiteType"Qubit"}) = [0, 1]
+
+# `eigvecs(X)`
 Base.AbstractArray(::StateName"+", ::Tuple{SiteType"Qubit"}) = [1, 1] / √2
 Base.AbstractArray(::StateName"-", ::Tuple{SiteType"Qubit"}) = [1, -1] / √2
+
+# `eigvecs(Y)`
 Base.AbstractArray(::StateName"i", ::Tuple{SiteType"Qubit"}) = [1, im] / √2
 Base.AbstractArray(::StateName"-i", ::Tuple{SiteType"Qubit"}) = [1, -im] / √2
 
@@ -30,49 +35,60 @@ end
 #
 # 1-Qubit gates
 #
-Base.AbstractArray(::OpName"X", ::Tuple{SiteType"Qubit"}) = [
-  0 1
-  1 0
-]
 
-Base.AbstractArray(::OpName"Y", ::Tuple{SiteType"Qubit"}) = [
-  0 -im
-  im 0
+Base.AbstractArray(::OpName"σ⁺", ::Tuple{SiteType"Qubit"}) = [
+  0 2
+  0 0
 ]
-
-Base.AbstractArray(::OpName"Z", ::Tuple{SiteType"Qubit"}) = [
+Base.AbstractArray(::OpName"σ⁻", ::Tuple{SiteType"Qubit"}) = [
+  0 0
+  2 0
+]
+Base.AbstractArray(::OpName"σᶻ", ::Tuple{SiteType"Qubit"}) = [
   1 0
   0 -1
 ]
 
-Base.AbstractArray(::OpName"S+", ::Tuple{SiteType"Qubit"}) = [
-  0 1
-  0 0
-]
-Base.AbstractArray(::OpName"S-", ::Tuple{SiteType"Qubit"}) = [
-  0 0
-  1 0
-]
+## # TODO: Write as `σ⁺ / 2`.
+## Base.AbstractArray(::OpName"S+", ::Tuple{SiteType"Qubit"}) = [
+##   0 1
+##   0 0
+## ]
+## 
+## # TODO: Write as `σ⁻ / 2`.
+## Base.AbstractArray(::OpName"S-", ::Tuple{SiteType"Qubit"}) = [
+##   0 0
+##   1 0
+## ]
+
+# TODO: Write as `(I + σᶻ) / 2`?
 Base.AbstractArray(::OpName"ProjUp", ::Tuple{SiteType"Qubit"}) = [
   1 0
   0 0
 ]
+
+# TODO: Define as `σ⁺ * σ−`?
+# TODO: Write as `(I - σᶻ) / 2`?
 Base.AbstractArray(::OpName"ProjDn", ::Tuple{SiteType"Qubit"}) = [
   0 0
   0 1
 ]
 
+# TODO: Determine a general spin definition.
+# `eigvecs(X)`
 Base.AbstractArray(::OpName"H", ::Tuple{SiteType"Qubit"}) = [
   1/√2 1/√2
   1/√2 -1/√2
 ]
 
+# exp(-im * n.θ / 2 * Z) * exp(im * n.θ)
 Base.AbstractArray(n::OpName"Phase", ::Tuple{SiteType"Qubit"}) = [
   1 0
   0 exp(im * n.θ)
 ]
 
 # Rotation around X-axis
+# exp(-im * n.θ / 2 * X)
 function Base.AbstractArray(n::OpName"Rx", ::Tuple{SiteType"Qubit"})
   return [
     cos(n.θ / 2) -im*sin(n.θ / 2)
@@ -81,6 +97,7 @@ function Base.AbstractArray(n::OpName"Rx", ::Tuple{SiteType"Qubit"})
 end
 
 # Rotation around Y-axis
+# exp(-im * n.θ / 2 * Y)
 function Base.AbstractArray(n::OpName"Ry", ::Tuple{SiteType"Qubit"})
   return [
     cos(n.θ / 2) -sin(n.θ / 2)
@@ -89,6 +106,7 @@ function Base.AbstractArray(n::OpName"Ry", ::Tuple{SiteType"Qubit"})
 end
 
 # Rotation around Z-axis
+# exp(-im * n.θ / 2 * Z)
 function Base.AbstractArray(n::OpName"Rz", ::Tuple{SiteType"Qubit"})
   return [
     exp(-im * n.θ / 2) 0
@@ -97,6 +115,7 @@ function Base.AbstractArray(n::OpName"Rz", ::Tuple{SiteType"Qubit"})
 end
 
 # Rotation around generic axis n̂
+# exp(-im * n.θ / 2 * n̂ ⋅ σ⃗)
 #=
 TODO: Define R-gate when `λ == -ϕ`, i.e.:
 ```julia
