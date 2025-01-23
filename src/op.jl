@@ -140,8 +140,18 @@ end
 @op_alias "adag" "a†"
 alias(::OpName"a") = OpName"a†"()'
 @op_alias "A" "a"
+
 alias(::OpName"n") = OpName"a†"() * OpName"a"()
 @op_alias "N" "n"
+
+# `cis(x) = exp(im * x)`
+alias(n::OpName"Phase") = cis(n.θ * OpName"n"())
+@op_alias "PHASE" "Phase"
+@op_alias "P" "Phase"
+@op_alias "π/8" "Phase" θ = π / 4
+@op_alias "T" "π/8"
+@op_alias "S" "Phase" θ = π / 2
+
 alias(::OpName"aa") = OpName("a") ⊗ OpName("a")
 alias(::OpName"a†a") = OpName("a†") ⊗ OpName("a")
 alias(::OpName"aa†") = OpName("a") ⊗ OpName("a†")
@@ -179,13 +189,17 @@ alias(::OpName"X") = (OpName"σ⁺"() + OpName"σ⁻"()) / 2
 @op_alias "σ¹" "X"
 @op_alias "σ₁" "X"
 @op_alias "σy" "Y"
-@op_alias "iX" "im" op = OpName"X"()
-@op_alias "√X" "√" op = OpName"X"()
-@op_alias "√NOT" "√" op = OpName"X"()
+alias(::OpName"iX") = im * OpName"X"()
+alias(::OpName"√X") = √OpName"X"()
+@op_alias "√NOT" "√X"
 alias(n::OpName"Sx") = OpName"X"() / 2
 @op_alias "Sˣ" "Sx"
 @op_alias "Sₓ" "Sx"
 alias(::OpName"Sx2") = OpName"Sx"()^2
+
+# Rotation around X-axis
+# exp(-im * n.θ / 2 * X)
+alias(n::OpName"Rx") = cis(-(n.θ / 2) * OpName"X"())
 
 alias(::OpName"Y") = -im * (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 # TODO: No subsript `\_y` available
@@ -202,11 +216,36 @@ alias(::OpName"iY") = (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 @op_alias "iσ2" "iY"
 @op_alias "iσ²" "iY"
 @op_alias "iσ₂" "iY"
-alias(n::OpName"Sy") = OpName("Y") / 2
+alias(n::OpName"Sy") = OpName"Y"() / 2
 @op_alias "Sʸ" "Sy"
-alias(n::OpName"iSy") = OpName("iY") / 2
+alias(n::OpName"iSy") = OpName"iY"() / 2
 @op_alias "iSʸ" "iSy"
 alias(::OpName"Sy2") = -OpName"iSy"()^2
+
+# Rotation around Y-axis
+# exp(-im * n.θ / 2 * Y)
+alias(n::OpName"Ry") = exp(-(n.θ / 2) * OpName"iY"())
+
+# Ising (XX) coupling gate
+# exp(-im * θ/2 * X ⊗ X)
+alias(n::OpName"Rxx") = exp(-im * (n.θ / 2) * OpName"X"() ⊗ OpName"X"())
+@op_alias "RXX" "Rxx"
+
+# Ising (YY) coupling gate
+# exp(-im * θ/2 * Y ⊗ Y)
+alias(n::OpName"Ryy") = exp(-im * (n.θ / 2) * OpName"Y"() ⊗ OpName"Y"())
+@op_alias "RYY" "Ryy"
+
+# Ising (ZZ) coupling gate
+# exp(-im * θ/2 * Z ⊗ Z)
+alias(n::OpName"Rzz") = exp(-im * (n.θ / 2) * OpName"Z"() ⊗ OpName"Z"())
+@op_alias "RZZ" "Rzz"
+
+## TODO: Check this definition and see if it is worth defining this.
+## # Ising (XY) coupling gate
+## # exp(-im * θ/2 * X ⊗ Y)
+## alias(n::OpName"Rxy") = exp(-im * (n.θ / 2) * OpName"X"() ⊗ OpName"Y"())
+## @op_alias "RXY" "Rxy"
 
 function Base.AbstractArray(n::OpName"σᶻ", domain_size::Tuple{Int})
   d = only(domain_size)
@@ -220,7 +259,7 @@ end
 @op_alias "σ³" "Z"
 @op_alias "σ₃" "Z"
 @op_alias "σz" "Z"
-@op_alias "iZ" "im" op = OpName"Z"()
+alias(::OpName"iZ") = im * OpName"Z"()
 alias(n::OpName"Sz") = OpName"Z"() / 2
 @op_alias "Sᶻ" "Sz"
 # TODO: Make sure it ends up real, using `S⁺` and `S⁻`,
@@ -235,12 +274,41 @@ alias(n::OpName"S2") = OpName"Sx2"() + OpName"Sy2"() + OpName"Sz2"()
 @op_alias "S²" "S2"
 alias(::OpName"Sz2") = OpName"Sz"()^2
 
+# Rotation around Z-axis
+# exp(-im * n.θ / 2 * Z)
+alias(n::OpName"Rz") = exp(-im * (n.θ / 2) * OpName"Z"())
+
 using LinearAlgebra: eigen
 function Base.AbstractArray(n::OpName"H", domain_size::Tuple{Int})
   Λ, H = eigen(AbstractArray(OpName("X"), domain_size))
   p = sortperm(Λ; rev=true)
   return H[:, p]
 end
+
+using LinearAlgebra: Diagonal
+nsites(::OpName"SWAP") = 2
+function Base.AbstractArray(::OpName"SWAP", domain_size::Tuple{Int,Int})
+  I_matrix = Diagonal(trues(prod(domain_size)))
+  I_array = reshape(I_matrix, (domain_size..., domain_size...))
+  SWAP_array = permutedims(I_array, (2, 1, 3, 4))
+  SWAP_matrix = reshape(SWAP_array, (prod(domain_size), prod(domain_size)))
+  return SWAP_matrix
+end
+@op_alias "Swap" "SWAP"
+alias(::OpName"√SWAP") = √(OpName"SWAP"())
+@op_alias "√Swap" "√SWAP"
+
+using LinearAlgebra: diagind
+nsites(::OpName"iSWAP") = 2
+function Base.AbstractArray(::OpName"iSWAP", domain_size::Tuple{Int,Int})
+  swap = AbstractArray(OpName"SWAP"(), domain_size)
+  iswap = im * swap
+  iswap[diagind(iswap)] .*= -im
+  return iswap
+end
+@op_alias "iSwap" "iSWAP"
+alias(::OpName"√iSWAP") = √(OpName"iSWAP"())
+@op_alias "√iSwap" "√iSWAP"
 
 ## TODO: Bring back these definitions.
 ## function default_random_matrix(eltype::Type, s::Index...)
@@ -284,6 +352,7 @@ for f in (
   :(Base.imag),
   :(Base.complex),
   :(Base.exp),
+  :(Base.cis),
   :(Base.cos),
   :(Base.sin),
   :(Base.adjoint),
@@ -354,9 +423,7 @@ function Base.:/(n::OpName"scaled", c::Number)
   return OpName"scaled"(; op=n.op, c=(n.c / c))
 end
 
-alias(n::OpName"im") = OpName"scaled"(; op=n.op, c=im)
-
-controlled(n::OpName; ncontrol=1) = OpName"Control"(; ncontrol, op=n)
+controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, op=n)
 
 # Expand the operator in a new basis.
 using LinearAlgebra: ⋅

@@ -1,5 +1,9 @@
 using LinearAlgebra: I
 
+alias(::SiteType"S=1/2") = SiteType"Qubit"()
+alias(::SiteType"S=½") = SiteType"Qubit"()
+alias(::SiteType"SpinHalf=1/2") = SiteType"Qubit"()
+
 Base.length(::SiteType"Qubit") = 2
 
 # `eigvecs(Z)`
@@ -31,7 +35,10 @@ Base.AbstractArray(::StateName"-i", ::Tuple{SiteType"Qubit"}) = [1, -im] / √2
 @state_alias "Ym" "-i"
 
 # SIC-POVMs
-@state_alias "Tetra1" "0"
+Base.AbstractArray(::StateName"Tetra0", ::Tuple{SiteType"Qubit"}) = [
+  1
+  0
+]
 Base.AbstractArray(::StateName"Tetra2", ::Tuple{SiteType"Qubit"}) = [
   1 / √3
   √2 / √3
@@ -72,50 +79,12 @@ Base.AbstractArray(::OpName"ProjDn", ::Tuple{SiteType"Qubit"}) = [
 @op_alias "Proj1" "ProjDn"
 @op_alias "proj1" "ProjDn"
 
-# TODO: Determine a general spin definition.
-# `eigvecs(X)`
+# TODO: Determine a general spin definition, such as
+# `eigvecs(X)`.
 Base.AbstractArray(::OpName"H", ::Tuple{SiteType"Qubit"}) = [
   1/√2 1/√2
   1/√2 -1/√2
 ]
-
-# exp(-im * n.θ / 2 * Z) * exp(im * n.θ)
-Base.AbstractArray(n::OpName"Phase", ::Tuple{SiteType"Qubit"}) = [
-  1 0
-  0 exp(im * n.θ)
-]
-@op_alias "PHASE" "Phase"
-@op_alias "P" "Phase"
-@op_alias "π/8" "Phase" θ = π / 4
-@op_alias "T" "π/8"
-@op_alias "S" "Phase" θ = π / 2
-
-# Rotation around X-axis
-# exp(-im * n.θ / 2 * X)
-function Base.AbstractArray(n::OpName"Rx", ::Tuple{SiteType"Qubit"})
-  return [
-    cos(n.θ / 2) -im*sin(n.θ / 2)
-    -im*sin(n.θ / 2) cos(n.θ / 2)
-  ]
-end
-
-# Rotation around Y-axis
-# exp(-im * n.θ / 2 * Y)
-function Base.AbstractArray(n::OpName"Ry", ::Tuple{SiteType"Qubit"})
-  return [
-    cos(n.θ / 2) -sin(n.θ / 2)
-    sin(n.θ / 2) cos(n.θ / 2)
-  ]
-end
-
-# Rotation around Z-axis
-# exp(-im * n.θ / 2 * Z)
-function Base.AbstractArray(n::OpName"Rz", ::Tuple{SiteType"Qubit"})
-  return [
-    exp(-im * n.θ / 2) 0
-    0 exp(im * n.θ / 2)
-  ]
-end
 
 # Rotation around generic axis n̂
 # exp(-im * n.θ / 2 * n̂ ⋅ σ⃗)
@@ -133,6 +102,7 @@ or:
 ```julia
 alias(n::OpName"R") = OpName"Rn"(; θ=n.θ, ϕ=n.ϕ, λ=-n.ϕ)
 =#
+# https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.UGate
 function Base.AbstractArray(n::OpName"Rn", ::Tuple{SiteType"Qubit"})
   return [
     cos(n.θ / 2) -exp(im * n.λ)*sin(n.θ / 2)
@@ -142,8 +112,9 @@ end
 @op_alias "Rn̂" "Rn"
 
 # TODO: Generalize to `"Qudit"` and other SiteTypes.
-nsites(n::OpName"Control") = get(params(n), :ncontrol, 1) + nsites(n.op)
-function Base.AbstractArray(n::OpName"Control", ts::Tuple{Vararg{SiteType"Qubit"}})
+# https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.UCGate
+nsites(n::OpName"Controlled") = get(params(n), :ncontrol, 1) + nsites(n.op)
+function Base.AbstractArray(n::OpName"Controlled", ts::Tuple{Vararg{SiteType"Qubit"}})
   # Number of target qubits.
   nt = nsites(n.op)
   # Number of control qubits.
@@ -154,10 +125,10 @@ function Base.AbstractArray(n::OpName"Control", ts::Tuple{Vararg{SiteType"Qubit"
     falses(2^nt, 2^nc) AbstractArray(n.op, ts[(nc + 1):end])
   ]
 end
-@op_alias "CNOT" "Control" op = OpName"X"()
-@op_alias "CX" "Control" op = OpName"X"()
-@op_alias "CY" "Control" op = OpName"Y"()
-@op_alias "CZ" "Control" op = OpName"Z"()
+@op_alias "CNOT" "Controlled" op = OpName"X"()
+@op_alias "CX" "Controlled" op = OpName"X"()
+@op_alias "CY" "Controlled" op = OpName"Y"()
+@op_alias "CZ" "Controlled" op = OpName"Z"()
 function alias(n::OpName"CPhase")
   return controlled(OpName"Phase"(; params(n)...))
 end
@@ -180,84 +151,14 @@ function Base.AbstractArray(::OpName"CRn")
 end
 @op_alias "CRn̂" "CRn"
 
-@op_alias "CCNOT" "Control" ncontrol = 2 op = OpName"X"()
+@op_alias "CCNOT" "Controlled" ncontrol = 2 op = OpName"X"()
 @op_alias "Toffoli" "CCNOT"
 @op_alias "CCX" "CCNOT"
 @op_alias "TOFF" "CCNOT"
 
-@op_alias "CSWAP" "Control" ncontrol = 2 op = OpName"SWAP"()
+@op_alias "CSWAP" "Controlled" ncontrol = 2 op = OpName"SWAP"()
 @op_alias "Fredkin" "CSWAP"
 @op_alias "CSwap" "CSWAP"
 @op_alias "CS" "CSWAP"
 
-@op_alias "CCCNOT" "Control" ncontrol = 3 op = OpName"X"()
-
-# TODO: Generalize to `"Qudit"` and other SiteTypes.
-# (I ⊗ I + X ⊗ X + Y ⊗ Y + Z ⊗ Z) / 2
-nsites(n::OpName"OpSWAP") = 1 + nsites(n.op)
-function Base.AbstractArray(n::OpName"OpSWAP", ts::Tuple{Vararg{SiteType"Qubit"}})
-  @assert nsites(n.op) == 1
-  return [
-    trues(1, 1) falses(1, 2) falses(1, 1)
-    falses(2, 1) AbstractArray(n.op, SiteType"Qubit"()) falses(2, 1)
-    falses(1, 1) falses(1, 2) trues(1, 1)
-  ]
-end
-@op_alias "SWAP" "OpSWAP" op = OpName"X"()
-@op_alias "Swap" "SWAP"
-@op_alias "√SWAP" "OpSWAP" op = OpName"√X"()
-@op_alias "√Swap" "√SWAP"
-@op_alias "iSWAP" "OpSWAP" op = OpName"iX"()
-@op_alias "iSwap" "iSWAP"
-@op_alias "√iSWAP" "OpSWAP" op = √(OpName"iX"())
-@op_alias "√iSwap" "√iSWAP"
-
-# Ising (XX) coupling gate
-# exp(-im * θ/2 * X ⊗ X)
-# TODO: Define as:
-# alias(n::OpName"Rxx") = exp(-im * (n.θ / 2) * OpName"X"() ⊗ OpName"X"())
-nsites(::OpName"Rxx") = 2
-function Base.AbstractArray(n::OpName"Rxx", t::Tuple{SiteType"Qubit",SiteType"Qubit"})
-  return [
-    cos(n.θ / 2) 0 0 -im*sin(n.θ / 2)
-    0 cos(n.θ / 2) -im*sin(n.θ / 2) 0
-    0 -im*sin(n.θ / 2) cos(n.θ / 2) 0
-    -im*sin(n.θ / 2) 0 0 cos(n.θ / 2)
-  ]
-end
-@op_alias "RXX" "Rxx"
-
-# Ising (YY) coupling gate
-# exp(-im * θ/2 * Y ⊗ Y)
-# TODO: Define as:
-# alias(n::OpName"Ryy") = exp(-im * (n.θ / 2) * OpName"Y"() ⊗ OpName"Y"())
-nsites(::OpName"Ryy") = 2
-function Base.AbstractArray(n::OpName"Ryy", ::Tuple{SiteType"Qubit",SiteType"Qubit"})
-  return [
-    cos(n.θ / 2) 0 0 im*sin(n.θ / 2)
-    0 cos(n.θ / 2) -im*sin(n.θ / 2) 0
-    0 -im*sin(n.θ / 2) cos(n.θ / 2) 0
-    im*sin(n.θ / 2) 0 0 cos(n.θ / 2)
-  ]
-end
-@op_alias "RYY" "Ryy"
-
-# Ising (ZZ) coupling gate
-# exp(-im * θ/2 * Z ⊗ Z)
-# TODO: Define as:
-# alias(n::OpName"Rzz") = exp(-im * (n.θ / 2) * OpName"Z"() ⊗ OpName"Z"())
-function Base.AbstractArray(n::OpName"Rzz", ::Tuple{SiteType"Qubit"})
-  return [
-    exp(-im * n.θ / 2) 0 0 0
-    0 exp(im * n.θ / 2) 0 0
-    0 0 exp(im * n.θ / 2) 0
-    0 0 0 exp(-im * n.θ / 2)
-  ]
-end
-@op_alias "RZZ" "Rzz"
-
-## TODO: This seems to be broken, investigate.
-## # Ising (XY) coupling gate
-## # exp(-im * θ/2 * X ⊗ Y)
-## alias(n::OpName"Rxy") = OpName("OpSWAP"; op=OpName"Rx"(; θ=n.θ))
-## @op_alias "RXY" "Rxy"
+@op_alias "CCCNOT" "Controlled" ncontrol = 3 op = OpName"X"()

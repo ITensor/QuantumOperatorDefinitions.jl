@@ -1,72 +1,13 @@
-"""
-    space(::SiteType"tJ";
-          conserve_qns = false,
-          conserve_sz = conserve_qns,
-          conserve_nf = conserve_qns,
-          conserve_nfparity = conserve_qns,
-          qnname_sz = "Sz",
-          qnname_nf = "Nf",
-          qnname_nfparity = "NfParity")
+Base.length(::SiteType"tJ") = 3
 
-Create the Hilbert space for a site of type "tJ".
+Base.AbstractArray(::StateName"Emp", ::SiteType"tJ") = [1.0, 0, 0]
+Base.AbstractArray(::StateName"Up", ::SiteType"tJ") = [0.0, 1, 0]
+Base.AbstractArray(::StateName"Dn", ::SiteType"tJ") = [0.0, 0, 1]
+Base.AbstractArray(::StateName"0", st::SiteType"tJ") = AbstractArray(StateName("Emp"), st)
+Base.AbstractArray(::StateName"↑", st::SiteType"tJ") = AbstractArray(StateName("Up"), st)
+Base.AbstractArray(::StateName"↓", st::SiteType"tJ") = AbstractArray(StateName("Dn"), st)
 
-Optionally specify the conserved symmetries and their quantum number labels.
-"""
-function space(
-  ::SiteType"tJ";
-  conserve_qns=false,
-  conserve_sz=conserve_qns,
-  conserve_nf=conserve_qns,
-  conserve_nfparity=conserve_qns,
-  qnname_sz="Sz",
-  qnname_nf="Nf",
-  qnname_nfparity="NfParity",
-  # Deprecated
-  conserve_parity=nothing,
-)
-  if !isnothing(conserve_parity)
-    conserve_nfparity = conserve_parity
-  end
-  if conserve_sz && conserve_nf
-    return [
-      QN((qnname_nf, 0, -1), (qnname_sz, 0)) => 1
-      QN((qnname_nf, 1, -1), (qnname_sz, +1)) => 1
-      QN((qnname_nf, 1, -1), (qnname_sz, -1)) => 1
-    ]
-  elseif conserve_nf
-    return [
-      QN(qnname_nf, 0, -1) => 1
-      QN(qnname_nf, 1, -1) => 2
-    ]
-  elseif conserve_sz
-    return [
-      QN((qnname_sz, 0), (qnname_nfparity, 0, -2)) => 1
-      QN((qnname_sz, +1), (qnname_nfparity, 1, -2)) => 1
-      QN((qnname_sz, -1), (qnname_nfparity, 1, -2)) => 1
-    ]
-  elseif conserve_nfparity
-    return [
-      QN(qnname_nfparity, 0, -2) => 1
-      QN(qnname_nfparity, 1, -2) => 2
-    ]
-  end
-  return 3
-end
-
-val(::ValName"Emp", ::SiteType"tJ") = 1
-val(::ValName"Up", ::SiteType"tJ") = 2
-val(::ValName"Dn", ::SiteType"tJ") = 3
-val(::ValName"0", st::SiteType"tJ") = val(ValName("Emp"), st)
-val(::ValName"↑", st::SiteType"tJ") = val(ValName("Up"), st)
-val(::ValName"↓", st::SiteType"tJ") = val(ValName("Dn"), st)
-
-state(::StateName"Emp", ::SiteType"tJ") = [1.0, 0, 0]
-state(::StateName"Up", ::SiteType"tJ") = [0.0, 1, 0]
-state(::StateName"Dn", ::SiteType"tJ") = [0.0, 0, 1]
-state(::StateName"0", st::SiteType"tJ") = state(StateName("Emp"), st)
-state(::StateName"↑", st::SiteType"tJ") = state(StateName("Up"), st)
-state(::StateName"↓", st::SiteType"tJ") = state(StateName("Dn"), st)
-
+# TODO: Update these to the latest syntax.
 ## function op!(Op::ITensor, ::OpName"Nup", ::SiteType"tJ", s::Index)
 ##   return Op[s' => 2, s => 2] = 1.0
 ## end
