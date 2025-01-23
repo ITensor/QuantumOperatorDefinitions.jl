@@ -14,3 +14,10 @@ value(::SiteType{T}) where {T} = T
 macro SiteType_str(s)
   return SiteType{Symbol(s)}
 end
+
+alias(t::SiteType) = t
+Base.AbstractUnitRange(t::SiteType) = Base.OneTo(length(t))
+Base.size(t::SiteType) = (length(t),)
+Base.size(t::SiteType, dim::Integer) = size(t)[dim]
+Base.axes(t::SiteType) = (AbstractUnitRange(t),)
+Base.axes(t::SiteType, dim::Integer) = axes(t)[dim]

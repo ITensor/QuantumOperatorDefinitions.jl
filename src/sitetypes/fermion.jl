@@ -1,3 +1,7 @@
+@op_alias "c" "C"
+@op_alias "cdag" "Cdag"
+@op_alias "c†" "Cdag"
+
 """
     space(::SiteType"Fermion";
           conserve_qns=false,

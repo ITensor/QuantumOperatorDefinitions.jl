@@ -1,3 +1,18 @@
+@op_alias "a↑" "Aup"
+@op_alias "a↓" "Adn"
+@op_alias "a†↓" "Adagdn"
+@op_alias "a†↑" "Adagup"
+@op_alias "c↑" "Cup"
+@op_alias "c↓" "Cdn"
+@op_alias "c†↑" "Cdagup"
+@op_alias "c†↓" "Cdagdn"
+@op_alias "n↑" "Nup"
+@op_alias "n↓" "Ndn"
+@op_alias "n↑↓" "Nupdn"
+@op_alias "ntot" "Ntot"
+@op_alias "F↑" "Fup"
+@op_alias "F↓" "Fdn"
+
 """
     space(::SiteType"Electron";
           conserve_qns = false,
