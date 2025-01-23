@@ -149,6 +149,12 @@ alias(::OpName"a†a†") = OpName("a†") ⊗ OpName("a†")
 
 δ(x, y) = (x == y) ? 1 : 0
 
+# See:
+# https://en.wikipedia.org/wiki/Spin_(physics)#Higher_spins
+# https://en.wikipedia.org/wiki/Pauli_matrices
+# https://en.wikipedia.org/wiki/Generalizations_of_Pauli_matrices
+# https://en.wikipedia.org/wiki/Generalized_Clifford_algebra
+# https://github.com/QuantumKitHub/MPSKitModels.jl/blob/v0.4.0/src/operators/spinoperators.jl
 function Base.AbstractArray(n::OpName"σ⁺", domain_size::Tuple{Int})
   d = only(domain_size)
   s = (d - 1) / 2

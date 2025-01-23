@@ -1,4 +1,3 @@
-using ChainRulesCore: @ignore_derivatives
 using ITensorBase: Index, ITensor, dag, prime, tags
 
 op(::OpName, ::SiteType, ::Index...; kwargs...) = nothing

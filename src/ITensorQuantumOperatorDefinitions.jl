@@ -16,8 +16,6 @@ include("sitetypes/tj.jl")
 include("sitetypes/qudit.jl")
 include("sitetypes/boson.jl")
 
-include("ITensorQuantumOperatorDefinitionsChainRulesCoreExt.jl")
-
 include("itensor/siteinds.jl")
 include("itensor/val.jl")
 include("itensor/state.jl")
