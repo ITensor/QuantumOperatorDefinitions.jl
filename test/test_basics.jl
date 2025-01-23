@@ -1,4 +1,5 @@
 using ITensorQuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, nsites
+using LinearAlgebra: Diagonal
 using Test: @test, @testset
 
 const real_elts = (Float32, Float64)
