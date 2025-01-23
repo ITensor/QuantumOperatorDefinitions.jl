@@ -1,6 +1,8 @@
 # TODO: Need to define or replace.
 # using ITensorBase: complex!, QN
 
+Base.length(::SiteType"S=1") = 3
+
 alias(::SiteType"SpinOne") = SiteType"S=1"()
 
 """
@@ -54,97 +56,18 @@ state(::StateName"Y+", ::SiteType"S=1") = [-1 / 2, -im / sqrt(2), 1 / 2]
 state(::StateName"Y0", ::SiteType"S=1") = [1 / sqrt(2), 0, 1 / sqrt(2)]
 state(::StateName"Y-", ::SiteType"S=1") = [-1 / 2, im / sqrt(2), 1 / 2]
 
-op(::OpName"Id", ::SiteType"S=1") = [
-  1.0 0.0 0.0
-  0.0 1.0 0.0
-  0.0 0.0 1.0
-]
-
-op(::OpName"Sz", ::SiteType"S=1") = [
-  1.0 0.0 0.0
-  0.0 0.0 0.0
-  0.0 0.0 -1.0
-]
-
-op(on::OpName"Sᶻ", t::SiteType"S=1") = op(alias(on), t)
-
-op(::OpName"S+", ::SiteType"S=1") = [
-  0.0 √2 0.0
-  0.0 0.0 √2
-  0.0 0.0 0.0
-]
-
-op(on::OpName"S⁺", t::SiteType"S=1") = op(alias(on), t)
-op(on::OpName"Splus", t::SiteType"S=1") = op(alias(on), t)
-op(on::OpName"Sp", t::SiteType"S=1") = op(alias(on), t)
-
-op(::OpName"S-", ::SiteType"S=1") = [
-  0.0 0.0 0.0
-  √2 0.0 0.0
-  0.0 √2 0.0
-]
-
-op(on::OpName"S⁻", t::SiteType"S=1") = op(alias(on), t)
-op(on::OpName"Sminus", t::SiteType"S=1") = op(alias(on), t)
-op(on::OpName"Sm", t::SiteType"S=1") = op(alias(on), t)
-
-op(::OpName"Sx", ::SiteType"S=1") = [
-  0.0 1/√2 0.0
-  1/√2 0.0 1/√2
-  0.0 1/√2 0.0
-]
-
-op(on::OpName"Sˣ", t::SiteType"S=1") = op(alias(on), t)
-
-op(::OpName"iSy", ::SiteType"S=1") = [
-  0.0 1/√2 0.0
-  -1/√2 0.0 1/√2
-  0.0 -1/√2 0.0
-]
-
-op(on::OpName"iSʸ", t::SiteType"S=1") = op(alias(on), t)
-
-op(::OpName"Sy", ::SiteType"S=1") = [
-  0.0 -im/√2 0.0
-  im/√2 0.0 -im/√2
-  0.0 im/√2 0.0
-]
-
-op(on::OpName"Sʸ", t::SiteType"S=1") = op(alias(on), t)
-
-op(::OpName"Sz2", ::SiteType"S=1") = [
-  1.0 0.0 0.0
-  0.0 0.0 0.0
-  0.0 0.0 1.0
-]
-
-op(::OpName"Sx2", ::SiteType"S=1") = [
-  0.5 0.0 0.5
-  0.0 1.0 0.0
-  0.5 0.0 0.5
-]
-
-op(::OpName"Sy2", ::SiteType"S=1") = [
-  0.5 0.0 -0.5
-  0.0 1.0 0.0
-  -0.5 0.0 0.5
-]
-
-op(::OpName"S2", ::SiteType"S=1") = [
-  2.0 0.0 0.0
-  0.0 2.0 0.0
-  0.0 0.0 2.0
-]
-
-op(on::OpName"S²", t::SiteType"S=1") = op(alias(on), t)
-
+# TODO: Delete this.
 space(st::SiteType"SpinOne"; kwargs...) = space(alias(st); kwargs...)
 
+# TODO: Delete this.
 state(name::StateName, st::SiteType"SpinOne") = state(name, alias(st))
+# TODO: Delete this.
 val(name::ValName, st::SiteType"SpinOne") = val(name, alias(st))
 
+# TODO: Delete this.
 ## function op!(Op::ITensor, o::OpName, st::SiteType"SpinOne", s::Index)
 ##   return op!(Op, o, alias(st), s)
 ## end
 
+# TODO: Delete this.
 op(o::OpName, st::SiteType"SpinOne") = op(o, alias(st))

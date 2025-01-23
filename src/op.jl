@@ -182,9 +182,10 @@ alias(::OpName"X") = (OpName"σ⁺"() + OpName"σ⁻"()) / 2
 @op_alias "iX" "im" op = OpName"X"()
 @op_alias "√X" "√" op = OpName"X"()
 @op_alias "√NOT" "√" op = OpName"X"()
-alias(n::OpName"Sx") = OpName("X") / 2
+alias(n::OpName"Sx") = OpName"X"() / 2
 @op_alias "Sˣ" "Sx"
 @op_alias "Sₓ" "Sx"
+alias(::OpName"Sx2") = OpName"Sx"()^2
 
 alias(::OpName"Y") = -im * (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 # TODO: No subsript `\_y` available
@@ -193,9 +194,7 @@ alias(::OpName"Y") = -im * (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 @op_alias "σ2" "Y"
 @op_alias "σ²" "Y"
 @op_alias "σ₂" "Y"
-function alias(::OpName"iY")
-  return real(OpName"Y"()im)
-end
+alias(::OpName"iY") = (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 @op_alias "iσy" "iY"
 # TODO: No subsript `\_y` available
 # in unicode.
@@ -207,6 +206,7 @@ alias(n::OpName"Sy") = OpName("Y") / 2
 @op_alias "Sʸ" "Sy"
 alias(n::OpName"iSy") = OpName("iY") / 2
 @op_alias "iSʸ" "iSy"
+alias(::OpName"Sy2") = -OpName"iSy"()^2
 
 function Base.AbstractArray(n::OpName"σᶻ", domain_size::Tuple{Int})
   d = only(domain_size)
@@ -221,7 +221,7 @@ end
 @op_alias "σ₃" "Z"
 @op_alias "σz" "Z"
 @op_alias "iZ" "im" op = OpName"Z"()
-alias(n::OpName"Sz") = OpName("Z") / 2
+alias(n::OpName"Sz") = OpName"Z"() / 2
 @op_alias "Sᶻ" "Sz"
 # TODO: Make sure it ends up real, using `S⁺` and `S⁻`,
 # define `Sx²`, `Sy²`, and `Sz²`, etc.
@@ -231,8 +231,9 @@ alias(n::OpName"Sz") = OpName("Z") / 2
 #   = (d - 1) * (d + 1) / 4 * I
 # ```
 # where `s = (d - 1) / 2`. See https://en.wikipedia.org/wiki/Spin_(physics)#Higher_spins.
-alias(n::OpName"S2") = (OpName("Sˣ")^2 + OpName("Sʸ")^2 + OpName("Sᶻ")^2)
+alias(n::OpName"S2") = OpName"Sx2"() + OpName"Sy2"() + OpName"Sz2"()
 @op_alias "S²" "S2"
+alias(::OpName"Sz2") = OpName"Sz"()^2
 
 using LinearAlgebra: eigen
 function Base.AbstractArray(n::OpName"H", domain_size::Tuple{Int})

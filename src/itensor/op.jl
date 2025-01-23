@@ -70,7 +70,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   ## end
 
   common_stypes = _sitetypes(commontags_s)
-  @ignore_derivatives push!(common_stypes, SiteType("Generic"))
+  # TODO: Delete this.
+  push!(common_stypes, SiteType("Generic"))
   opn = OpName(name)
   for st in common_stypes
     op_mat = AbstractArray(opn, st; kwargs...)
