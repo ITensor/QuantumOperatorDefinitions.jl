@@ -1,7 +1,7 @@
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
-ITensorQuantumOperatorDefinitions = "fd9b415b-e710-4e2a-b407-cba023081494"
+QuantumOperatorDefinitions = "826dd319-6fd5-459a-a990-3a4f214664bf"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"

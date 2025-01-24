@@ -1,21 +1,21 @@
-using ITensorQuantumOperatorDefinitions: ITensorQuantumOperatorDefinitions
+using QuantumOperatorDefinitions: QuantumOperatorDefinitions
 using Documenter: Documenter, DocMeta, deploydocs, makedocs
 
 DocMeta.setdocmeta!(
-  ITensorQuantumOperatorDefinitions,
+  QuantumOperatorDefinitions,
   :DocTestSetup,
-  :(using ITensorQuantumOperatorDefinitions);
+  :(using QuantumOperatorDefinitions);
   recursive=true,
 )
 
 include("make_index.jl")
 
 makedocs(;
-  modules=[ITensorQuantumOperatorDefinitions],
+  modules=[QuantumOperatorDefinitions],
   authors="ITensor developers <support@itensor.org> and contributors",
-  sitename="ITensorQuantumOperatorDefinitions.jl",
+  sitename="QuantumOperatorDefinitions.jl",
   format=Documenter.HTML(;
-    canonical="https://ITensor.github.io/ITensorQuantumOperatorDefinitions.jl",
+    canonical="https://ITensor.github.io/QuantumOperatorDefinitions.jl",
     edit_link="main",
     assets=String[],
   ),
@@ -23,7 +23,7 @@ makedocs(;
 )
 
 deploydocs(;
-  repo="github.com/ITensor/ITensorQuantumOperatorDefinitions.jl",
+  repo="github.com/ITensor/QuantumOperatorDefinitions.jl",
   devbranch="main",
   push_preview=true,
 )

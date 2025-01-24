@@ -1,4 +1,4 @@
-using ITensorQuantumOperatorDefinitions
+using QuantumOperatorDefinitions
 using BenchmarkTools
 
 SUITE = BenchmarkGroup()

@@ -1,4 +1,4 @@
-module ITensorQuantumOperatorDefinitions
+module QuantumOperatorDefinitions
 
 include("sitetype.jl")
 include("state.jl")

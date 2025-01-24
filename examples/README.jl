@@ -1,9 +1,9 @@
-# # ITensorQuantumOperatorDefinitions.jl
+# # QuantumOperatorDefinitions.jl
 # 
-# [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ITensor.github.io/ITensorQuantumOperatorDefinitions.jl/stable/)
-# [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ITensor.github.io/ITensorQuantumOperatorDefinitions.jl/dev/)
-# [![Build Status](https://github.com/ITensor/ITensorQuantumOperatorDefinitions.jl/actions/workflows/Tests.yml/badge.svg?branch=main)](https://github.com/ITensor/ITensorQuantumOperatorDefinitions.jl/actions/workflows/Tests.yml?query=branch%3Amain)
-# [![Coverage](https://codecov.io/gh/ITensor/ITensorQuantumOperatorDefinitions.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensorQuantumOperatorDefinitions.jl)
+# [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ITensor.github.io/QuantumOperatorDefinitions.jl/stable/)
+# [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ITensor.github.io/QuantumOperatorDefinitions.jl/dev/)
+# [![Build Status](https://github.com/ITensor/QuantumOperatorDefinitions.jl/actions/workflows/Tests.yml/badge.svg?branch=main)](https://github.com/ITensor/QuantumOperatorDefinitions.jl/actions/workflows/Tests.yml?query=branch%3Amain)
+# [![Coverage](https://codecov.io/gh/ITensor/QuantumOperatorDefinitions.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/QuantumOperatorDefinitions.jl)
 # [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 # [![Aqua](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
@@ -31,13 +31,13 @@ julia> Pkg.Registry.add(url="git@github.com:ITensor/ITensorRegistry.git")
 
 #=
 ```julia
-julia> Pkg.add("ITensorQuantumOperatorDefinitions")
+julia> Pkg.add("QuantumOperatorDefinitions")
 ```
 =#
 
 # ## Examples
 
-using ITensorQuantumOperatorDefinitions:
+using QuantumOperatorDefinitions:
   OpName, SiteType, StateName, ⊗, controlled, op, state
 using LinearAlgebra: Diagonal
 using SparseArrays: SparseMatrixCSC, SparseVector

@@ -1,4 +1,4 @@
-using ITensorQuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, op, state, nsites
+using QuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, op, state, nsites
 using LinearAlgebra: Diagonal
 using Test: @test, @testset
 
@@ -6,7 +6,7 @@ const real_elts = (Float32, Float64)
 const complex_elts = map(elt -> Complex{elt}, real_elts)
 const elts = (real_elts..., complex_elts...)
 
-@testset "ITensorQuantumOperatorDefinitions" begin
+@testset "QuantumOperatorDefinitions" begin
   @testset "Qubit/Qudit" begin
     # https://en.wikipedia.org/wiki/Pauli_matrices
     # https://en.wikipedia.org/wiki/Spin_(physics)#Higher_spins

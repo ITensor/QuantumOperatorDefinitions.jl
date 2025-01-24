@@ -1,6 +1,6 @@
 ---
-name: ITensorQuantumOperatorDefinitions.jl feature request
-about: Suggest an idea for ITensorQuantumOperatorDefinitions.jl
+name: QuantumOperatorDefinitions.jl feature request
+about: Suggest an idea for QuantumOperatorDefinitions.jl
 title: "[ENHANCEMENT] YOUR SHORT DESCRIPTION OF THE FEATURE REQUEST HERE"
 labels: ["enhancement"]
 assignees: ''

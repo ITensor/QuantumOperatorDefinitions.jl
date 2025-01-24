@@ -1,6 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
-ITensorQuantumOperatorDefinitions = "fd9b415b-e710-4e2a-b407-cba023081494"
+QuantumOperatorDefinitions = "826dd319-6fd5-459a-a990-3a4f214664bf"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
