@@ -1,9 +1,9 @@
 using Literate: Literate
-using ITensorQuantumOperatorDefinitions: ITensorQuantumOperatorDefinitions
+using QuantumOperatorDefinitions: QuantumOperatorDefinitions
 
 Literate.markdown(
-  joinpath(pkgdir(ITensorQuantumOperatorDefinitions), "examples", "README.jl"),
-  joinpath(pkgdir(ITensorQuantumOperatorDefinitions), "docs", "src");
+  joinpath(pkgdir(QuantumOperatorDefinitions), "examples", "README.jl"),
+  joinpath(pkgdir(QuantumOperatorDefinitions), "docs", "src");
   flavor=Literate.DocumenterFlavor(),
   name="index",
 )

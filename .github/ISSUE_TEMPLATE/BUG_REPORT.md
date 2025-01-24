@@ -1,6 +1,6 @@
 ---
-name: ITensorQuantumOperatorDefinitions.jl bug report
-about: Create a bug report to help us improve ITensorQuantumOperatorDefinitions.jl
+name: QuantumOperatorDefinitions.jl bug report
+about: Create a bug report to help us improve QuantumOperatorDefinitions.jl
 title: "[BUG] YOUR SHORT DESCRIPTION OF THE BUG HERE"
 labels: ["bug"]
 assignees: ''
@@ -55,8 +55,8 @@ If you provided a minimal code that demonstrates the bug or unexpected behavior,
 julia> versioninfo()
 [YOUR OUTPUT HERE]
 ```
- - Output from `using Pkg; Pkg.status("ITensorQuantumOperatorDefinitions")`:
+ - Output from `using Pkg; Pkg.status("QuantumOperatorDefinitions")`:
 ```julia
-julia> using Pkg; Pkg.status("ITensorQuantumOperatorDefinitions")
+julia> using Pkg; Pkg.status("QuantumOperatorDefinitions")
 [YOUR OUTPUT HERE]
 ```

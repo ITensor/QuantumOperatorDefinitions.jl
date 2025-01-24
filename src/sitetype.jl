@@ -1,13 +1,23 @@
-using ChainRulesCore: @ignore_derivatives
+struct SiteType{T,Params}
+  params::Params
+end
+params(t::SiteType) = getfield(t, :params)
 
-# TODO: Need to define or replace.
-# using ITensorBase: product, swapprime
+Base.getproperty(t::SiteType, name::Symbol) = getfield(params(t), name)
 
-# TODO: Add `params<:NamedTuple` field.
-struct SiteType{T} end
-SiteType(s::AbstractString) = SiteType{Symbol(s)}()
-SiteType(i::Integer) = SiteType{Symbol(i)}()
+SiteType{N}(params) where {N} = SiteType{N,typeof(params)}(params)
+SiteType{N}(; kwargs...) where {N} = SiteType{N}((; kwargs...))
+
+SiteType(s::AbstractString; kwargs...) = SiteType{Symbol(s)}(; kwargs...)
+SiteType(i::Integer; kwargs...) = SiteType{Symbol(i)}(; kwargs...)
 value(::SiteType{T}) where {T} = T
 macro SiteType_str(s)
   return SiteType{Symbol(s)}
 end
+
+alias(t::SiteType) = t
+Base.AbstractUnitRange(t::SiteType) = Base.OneTo(length(t))
+Base.size(t::SiteType) = (length(t),)
+Base.size(t::SiteType, dim::Integer) = size(t)[dim]
+Base.axes(t::SiteType) = (AbstractUnitRange(t),)
+Base.axes(t::SiteType, dim::Integer) = axes(t)[dim]
