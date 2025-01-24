@@ -1,5 +1,7 @@
 module QuantumOperatorDefinitions
 
+export @OpName_str, @SiteType_str, @StateName_str, OpName, SiteType, StateName, ⊗, op, state
+
 include("sitetype.jl")
 include("state.jl")
 include("op.jl")
