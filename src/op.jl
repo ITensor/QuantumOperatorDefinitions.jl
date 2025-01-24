@@ -1,26 +1,42 @@
+using Random: randstring
+
 struct OpName{Name,Params}
-  params::Params
+  function OpName{Name,Params}(params::NamedTuple) where {Name,Params}
+    return new{Name,(; Params..., params...)}()
+  end
 end
-params(n::OpName) = getfield(n, :params)
+name(::OpName{Name}) where {Name} = Name
+params(::OpName{<:Any,Params}) where {Params} = Params
 
 Base.getproperty(n::OpName, name::Symbol) = getfield(params(n), name)
 
-OpName{N}(params) where {N} = OpName{N,typeof(params)}(params)
+OpName{Name,Params}(; kwargs...) where {Name,Params} = OpName{Name,Params}((; kwargs...))
+
+OpName{N}(params::NamedTuple) where {N} = OpName{N,params}()
 OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
+
+const DAGGER_STRING = randstring()
+const UPARROW_STRING = randstring()
+const DOWNARROW_STRING = randstring()
+const OPEXPR_REPLACEMENTS = (
+  "†" => DAGGER_STRING, "↑" => UPARROW_STRING, "↓" => DOWNARROW_STRING
+)
 
 # This compiles operator expressions, such as:
 # ```julia
 # opexpr("X + Y") == OpName("X") + OpName("Y")
 # opexpr("Ry{θ=π/2}") == OpName("Ry"; θ=π/2)
 # ```
-function opexpr(n::String)
-  return opexpr(Meta.parse(n))
+function opexpr(n::String; kwargs...)
+  n = replace(n, OPEXPR_REPLACEMENTS...)
+  return opexpr(Meta.parse(n); kwargs...)
 end
 opexpr(n::Number) = n
-function opexpr(n::Symbol)
+function opexpr(n::Symbol; kwargs...)
   n === :im && return im
   n === :π && return π
-  return OpName{n}()
+  n = Symbol(replace(String(n), reverse.(OPEXPR_REPLACEMENTS)...))
+  return OpName{n}(; kwargs...)
 end
 function opexpr(ex::Expr)
   if Meta.isexpr(ex, :call)
@@ -41,12 +57,107 @@ function opexpr(ex::Expr)
   return error("Can't parse expression $ex.")
 end
 
+# TODO: Should this parse the string?
 OpName(s::AbstractString; kwargs...) = OpName{Symbol(s)}(; kwargs...)
 OpName(s::Symbol; kwargs...) = OpName{s}(; kwargs...)
-name(::OpName{N}) where {N} = N
+# TODO: Should this parse the string?
 macro OpName_str(s)
-  return OpName{Symbol(s)}
+  return :(OpName{$(Expr(:quote, Symbol(s)))})
 end
+
+# This version parses. Disabled for now until
+# it is written better, there is a compelling
+# use case, and the name is decided.
+# TODO: Write this in terms of expressions, avoid
+# `eval`.
+# macro opexpr_str(s)
+#   return :(typeof(opexpr($s)))
+# end
+
+for f in (
+  :(Base.sqrt),
+  :(Base.real),
+  :(Base.imag),
+  :(Base.complex),
+  :(Base.exp),
+  :(Base.cis),
+  :(Base.cos),
+  :(Base.sin),
+  :(Base.adjoint),
+  :(Base.:+),
+  :(Base.:-),
+)
+  @eval begin
+    $f(n::OpName) = OpName"f"(; f=$f, op=n)
+  end
+end
+
+# Unary operations
+nsites(n::OpName"f") = nsites(n.op)
+function Base.AbstractArray(n::OpName"f", domain_size::Tuple{Vararg{Int}})
+  return n.f(AbstractArray(n.op, domain_size))
+end
+
+nsites(n::OpName"^") = nsites(n.op)
+function Base.AbstractArray(n::OpName"^", domain_size::Tuple{Vararg{Int}})
+  return AbstractArray(n.op, domain_size)^n.exponent
+end
+Base.:^(n::OpName, exponent) = OpName"^"(; op=n, exponent)
+
+nsites(n::OpName"kron") = nsites(n.op1) + nsites(n.op2)
+function Base.AbstractArray(n::OpName"kron", domain_size::Tuple{Vararg{Int}})
+  domain_size1 = domain_size[1:nsites(n.op1)]
+  domain_size2 = domain_size[(nsites(n.op1) + 1):end]
+  @assert length(domain_size2) == nsites(n.op2)
+  return kron(AbstractArray(n.op1, domain_size1), AbstractArray(n.op2, domain_size2))
+end
+Base.kron(n1::OpName, n2::OpName) = OpName"kron"(; op1=n1, op2=n2)
+⊗(n1::OpName, n2::OpName) = kron(n1, n2)
+
+function nsites(n::OpName"+")
+  @assert nsites(n.op1) == nsites(n.op2)
+  return nsites(n.op1)
+end
+function Base.AbstractArray(n::OpName"+", domain_size::Tuple{Vararg{Int}})
+  return AbstractArray(n.op1, domain_size) + AbstractArray(n.op2, domain_size)
+end
+Base.:+(n1::OpName, n2::OpName) = OpName"+"(; op1=n1, op2=n2)
+Base.:-(n1::OpName, n2::OpName) = n1 + (-n2)
+
+function nsites(n::OpName"*")
+  @assert nsites(n.op1) == nsites(n.op2)
+  return nsites(n.op1)
+end
+function Base.AbstractArray(n::OpName"*", domain_size::Tuple{Vararg{Int}})
+  return AbstractArray(n.op1, domain_size) * AbstractArray(n.op2, domain_size)
+end
+Base.:*(n1::OpName, n2::OpName) = OpName"*"(; op1=n1, op2=n2)
+
+nsites(n::OpName"scaled") = nsites(n.op)
+function Base.AbstractArray(n::OpName"scaled", domain_size::Tuple{Vararg{Int}})
+  return AbstractArray(n.op, domain_size) * n.c
+end
+function Base.:*(c::Number, n::OpName)
+  return OpName"scaled"(; op=n, c)
+end
+function Base.:*(n::OpName, c::Number)
+  return OpName"scaled"(; op=n, c)
+end
+function Base.:/(n::OpName, c::Number)
+  return OpName"scaled"(; op=n, c=inv(c))
+end
+
+function Base.:*(c::Number, n::OpName"scaled")
+  return OpName"scaled"(; op=n.op, c=(c * n.c))
+end
+function Base.:*(n::OpName"scaled", c::Number)
+  return OpName"scaled"(; op=n.op, c=(n.c * c))
+end
+function Base.:/(n::OpName"scaled", c::Number)
+  return OpName"scaled"(; op=n.op, c=(n.c / c))
+end
+
+controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, op=n)
 
 function op_alias_expr(name1, name2, pars...)
   return :(function alias(n::OpName{Symbol($name1)})
@@ -117,7 +228,7 @@ function (arrtype::Type{<:AbstractArray})(n::OpName)
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
-  return arrtype(OpName(n; kwargs...), domain...)
+  return arrtype(opexpr(n; kwargs...), domain...)
 end
 function op(elt::Type{<:Number}, n::String, domain...; kwargs...)
   return op(AbstractArray{elt}, n, domain...; kwargs...)
@@ -135,26 +246,6 @@ function nsites(n::Union{StateName,OpName})
   end
   return nsites(n′)
 end
-
-## TODO: Delete.
-## # Default implementations of op
-## op(::OpName; kwargs...) = nothing
-## op(::OpName, ::SiteType; kwargs...) = nothing
-
-function _sitetypes(ts::Set)
-  return collect(SiteType, SiteType.(ts))
-end
-
-## TODO: Delete.
-## op(name::AbstractString; kwargs...) = error("Must input indices when creating an `op`.")
-
-# To ease calling of other op overloads,
-# allow passing a string as the op name
-## TODO: Bring this back?
-## op(opname::AbstractString, t::SiteType; kwargs...) = op(OpName(opname), t; kwargs...)
-
-# TODO: Bring this back?
-# op(f::Function, args...; kwargs...) = f(op(args...; kwargs...))
 
 using LinearAlgebra: Diagonal
 function Base.AbstractArray(::OpName"Id", domain_size::Tuple{Int})
@@ -214,15 +305,13 @@ function Base.AbstractArray(n::OpName"σ⁺", domain_size::Tuple{Int})
   return [2 * δ(i + 1, j) * √((s + 1) * (i + j - 1) - i * j) for i in 1:d, j in 1:d]
 end
 alias(::OpName"S⁺") = OpName("σ⁺") / 2
-@op_alias "S+" "S⁺"
-@op_alias "Splus" "S+"
-@op_alias "Sp" "S+"
+@op_alias "Splus" "S⁺"
+@op_alias "Sp" "S⁺"
 
 alias(::OpName"σ⁻") = OpName"σ⁺"()'
 alias(::OpName"S⁻") = OpName("σ⁻") / 2
-@op_alias "S-" "S⁻"
-@op_alias "Sminus" "S-"
-@op_alias "Sm" "S-"
+@op_alias "Sminus" "S⁻"
+@op_alias "Sm" "S⁻"
 
 alias(::OpName"X") = (OpName"σ⁺"() + OpName"σ⁻"()) / 2
 @op_alias "σx" "X"
@@ -382,91 +471,6 @@ alias(::OpName"√iSWAP") = √(OpName"iSWAP"())
 ## function op!(o::ITensor, ::OpName"randU", st::SiteType"Generic", s::Index...; kwargs...)
 ##   return op!(o, OpName("RandomUnitary"), st, s...; kwargs...)
 ## end
-
-# Unary operations
-nsites(n::OpName"f") = nsites(n.op)
-function Base.AbstractArray(n::OpName"f", domain_size::Tuple{Vararg{Int}})
-  return n.f(AbstractArray(n.op, domain_size))
-end
-
-for f in (
-  :(Base.sqrt),
-  :(Base.real),
-  :(Base.imag),
-  :(Base.complex),
-  :(Base.exp),
-  :(Base.cis),
-  :(Base.cos),
-  :(Base.sin),
-  :(Base.adjoint),
-  :(Base.:+),
-  :(Base.:-),
-)
-  @eval begin
-    $f(n::OpName) = OpName"f"(; f=$f, op=n)
-  end
-end
-
-nsites(n::OpName"^") = nsites(n.op)
-function Base.AbstractArray(n::OpName"^", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op, domain_size)^n.exponent
-end
-Base.:^(n::OpName, exponent) = OpName"^"(; op=n, exponent)
-
-nsites(n::OpName"kron") = nsites(n.op1) + nsites(n.op2)
-function Base.AbstractArray(n::OpName"kron", domain_size::Tuple{Vararg{Int}})
-  domain_size1 = domain_size[1:nsites(n.op1)]
-  domain_size2 = domain_size[(nsites(n.op1) + 1):end]
-  @assert length(domain_size2) == nsites(n.op2)
-  return kron(AbstractArray(n.op1, domain_size1), AbstractArray(n.op2, domain_size2))
-end
-Base.kron(n1::OpName, n2::OpName) = OpName"kron"(; op1=n1, op2=n2)
-⊗(n1::OpName, n2::OpName) = kron(n1, n2)
-
-function nsites(n::OpName"+")
-  @assert nsites(n.op1) == nsites(n.op2)
-  return nsites(n.op1)
-end
-function Base.AbstractArray(n::OpName"+", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op1, domain_size) + AbstractArray(n.op2, domain_size)
-end
-Base.:+(n1::OpName, n2::OpName) = OpName"+"(; op1=n1, op2=n2)
-Base.:-(n1::OpName, n2::OpName) = n1 + (-n2)
-
-function nsites(n::OpName"*")
-  @assert nsites(n.op1) == nsites(n.op2)
-  return nsites(n.op1)
-end
-function Base.AbstractArray(n::OpName"*", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op1, domain_size) * AbstractArray(n.op2, domain_size)
-end
-Base.:*(n1::OpName, n2::OpName) = OpName"*"(; op1=n1, op2=n2)
-
-nsites(n::OpName"scaled") = nsites(n.op)
-function Base.AbstractArray(n::OpName"scaled", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op, domain_size) * n.c
-end
-function Base.:*(c::Number, n::OpName)
-  return OpName"scaled"(; op=n, c)
-end
-function Base.:*(n::OpName, c::Number)
-  return OpName"scaled"(; op=n, c)
-end
-function Base.:/(n::OpName, c::Number)
-  return OpName"scaled"(; op=n, c=inv(c))
-end
-
-function Base.:*(c::Number, n::OpName"scaled")
-  return OpName"scaled"(; op=n.op, c=(c * n.c))
-end
-function Base.:*(n::OpName"scaled", c::Number)
-  return OpName"scaled"(; op=n.op, c=(n.c * c))
-end
-function Base.:/(n::OpName"scaled", c::Number)
-  return OpName"scaled"(; op=n.op, c=(n.c / c))
-end
-
-controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, op=n)
 
 # Expand the operator in a new basis.
 using LinearAlgebra: ⋅
