@@ -8,6 +8,39 @@ Base.getproperty(n::OpName, name::Symbol) = getfield(params(n), name)
 OpName{N}(params) where {N} = OpName{N,typeof(params)}(params)
 OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
 
+# This compiles operator expressions, such as:
+# ```julia
+# opexpr("X + Y") == OpName("X") + OpName("Y")
+# opexpr("Ry{θ=π/2}") == OpName("Ry"; θ=π/2)
+# ```
+function opexpr(n::String)
+  return opexpr(Meta.parse(n))
+end
+opexpr(n::Number) = n
+function opexpr(n::Symbol)
+  n === :im && return im
+  n === :π && return π
+  return OpName{n}()
+end
+function opexpr(ex::Expr)
+  if Meta.isexpr(ex, :call)
+    return eval(ex.args[1])(opexpr.(ex.args[2:end])...)
+  end
+  if Meta.isexpr(ex, :curly)
+    # Syntax for parametrized gates, i.e.
+    # `opexpr("Ry{θ=π/2}")`.
+    params = ex.args[2:end]
+    kwargs = Dict(
+      map(params) do param
+        @assert Meta.isexpr(param, :(=))
+        return param.args[1] => eval(param.args[2])
+      end,
+    )
+    return OpName{ex.args[1]}(; kwargs...)
+  end
+  return error("Can't parse expression $ex.")
+end
+
 OpName(s::AbstractString; kwargs...) = OpName{Symbol(s)}(; kwargs...)
 OpName(s::Symbol; kwargs...) = OpName{s}(; kwargs...)
 name(::OpName{N}) where {N} = N

@@ -32,8 +32,7 @@ julia> Pkg.add("QuantumOperatorDefinitions")
 ## Examples
 
 ````julia
-using QuantumOperatorDefinitions:
-  OpName, SiteType, StateName, ⊗, controlled, op, state
+using QuantumOperatorDefinitions: OpName, SiteType, StateName, ⊗, controlled, op, state
 using LinearAlgebra: Diagonal
 using SparseArrays: SparseMatrixCSC, SparseVector
 using Test: @test
