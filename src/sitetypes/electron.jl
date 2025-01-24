@@ -238,8 +238,8 @@ function Base.AbstractArray(::OpName"Sˣ", st::Tuple{SiteType"Electron"})
   return AbstractArray(OpName("Sx"), st)
 end
 
-function Base.AbstractArray(::OpName"S+", ::Tuple{SiteType"Electron"})
-  # cat(falses(1, 1), Matrix(OpName("S+")), falses(1, 1); dims=(1, 2))
+function Base.AbstractArray(::OpName"S⁺", ::Tuple{SiteType"Electron"})
+  # cat(falses(1, 1), Matrix(OpName("S⁺")), falses(1, 1); dims=(1, 2))
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 1.0 0.0
@@ -247,19 +247,15 @@ function Base.AbstractArray(::OpName"S+", ::Tuple{SiteType"Electron"})
     0.0 0.0 0.0 0.0
   ]
 end
-
-function Base.AbstractArray(::OpName"S⁺", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S+"), st)
-end
 function Base.AbstractArray(::OpName"Sp", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S+"), st)
+  return AbstractArray(OpName("S⁺"), st)
 end
 function Base.AbstractArray(::OpName"Splus", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S+"), st)
+  return AbstractArray(OpName("S⁺"), st)
 end
 
-function Base.AbstractArray(::OpName"S-", ::Tuple{SiteType"Electron"})
-  # cat(falses(1, 1), Matrix(OpName("S-")), falses(1, 1); dims=(1, 2))
+function Base.AbstractArray(::OpName"S⁻", ::Tuple{SiteType"Electron"})
+  # cat(falses(1, 1), Matrix(OpName("S⁻")), falses(1, 1); dims=(1, 2))
   return [
     0.0 0.0 0.0 0.0
     0.0 0.0 0.0 0.0
@@ -267,15 +263,11 @@ function Base.AbstractArray(::OpName"S-", ::Tuple{SiteType"Electron"})
     0.0 0.0 0.0 0.0
   ]
 end
-
-function Base.AbstractArray(::OpName"S⁻", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S-"), st)
-end
 function Base.AbstractArray(::OpName"Sm", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S-"), st)
+  return AbstractArray(OpName("S⁻"), st)
 end
 function Base.AbstractArray(::OpName"Sminus", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S-"), st)
+  return AbstractArray(OpName("S⁻"), st)
 end
 
 @op_alias "a↑" "Aup"

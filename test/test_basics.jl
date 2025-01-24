@@ -119,14 +119,13 @@ const elts = (real_elts..., complex_elts...)
     end
   end
   @testset "Parsing" begin
-    # TODO: Should this be called in the `OpName`/`op` constructor?
     @test Matrix(opexpr("X * Y")) == op("X") * op("Y")
-    @test Matrix(opexpr("X * Y + Z")) == op("X") * op("Y") + op("Z")
-    @test Matrix(opexpr("X * Y + 2 * Z")) == op("X") * op("Y") + 2 * op("Z")
-    @test Matrix(opexpr("exp(im * (X * Y + 2 * Z))")) ==
-      exp(im * (op("X") * op("Y") + 2 * op("Z")))
-    @test Matrix(opexpr("exp(im * (X ⊗ Y + Z ⊗ Z))")) ==
+    @test op("X * Y") == op("X") * op("Y")
+    @test op("X * Y + Z") == op("X") * op("Y") + op("Z")
+    @test op("X * Y + 2 * Z") == op("X") * op("Y") + 2 * op("Z")
+    @test op("exp(im * (X * Y + 2 * Z))") == exp(im * (op("X") * op("Y") + 2 * op("Z")))
+    @test op("exp(im * (X ⊗ Y + Z ⊗ Z))") ==
       exp(im * (kron(op("X"), op("Y")) + kron(op("Z"), op("Z"))))
-    @test Matrix(opexpr("Ry{θ=π/2}")) == op("Ry"; θ=π / 2)
+    @test op("Ry{θ=π/2}") == op("Ry"; θ=π / 2)
   end
 end
