@@ -83,6 +83,16 @@ function (arrtype::Type{<:AbstractArray})(n::OpName)
   return arrtype(n, ntuple(Returns(default_sitetype()), nsites(n)))
 end
 
+function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
+  return arrtype(OpName(n; kwargs...), domain...)
+end
+function op(elt::Type{<:Number}, n::String, domain...; kwargs...)
+  return op(AbstractArray{elt}, n, domain...; kwargs...)
+end
+function op(n::String, domain...; kwargs...)
+  return op(AbstractArray, n, domain...; kwargs...)
+end
+
 # `Int(ndims // 2)`, i.e. `ndims_domain`/`ndims_codomain`.
 function nsites(n::Union{StateName,OpName})
   n′ = alias(n)

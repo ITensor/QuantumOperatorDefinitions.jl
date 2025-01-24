@@ -1,4 +1,4 @@
-using ITensorQuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, nsites
+using ITensorQuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, op, state, nsites
 using LinearAlgebra: Diagonal
 using Test: @test, @testset
 
