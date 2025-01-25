@@ -1,1 +1,1 @@
-has_fermion_string(::OpName, ::SiteType) = nothing
+has_fermion_string(::OpName, ::SiteType) = false

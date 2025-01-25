@@ -18,8 +18,23 @@ OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
 const DAGGER_STRING = randstring()
 const UPARROW_STRING = randstring()
 const DOWNARROW_STRING = randstring()
+const PLUS_STRING = randstring()
+const MINUS_STRING = randstring()
 const OPEXPR_REPLACEMENTS = (
-  "†" => DAGGER_STRING, "↑" => UPARROW_STRING, "↓" => DOWNARROW_STRING
+  "†" => DAGGER_STRING,
+  "↑" => UPARROW_STRING,
+  "↓" => DOWNARROW_STRING,
+  # Replace trailing plus and minus characters
+  # in operators, which don't parse properly.
+  r"(\S)\+" => SubstitutionString("\\1$(PLUS_STRING)"),
+  r"(\S)\-" => SubstitutionString("\\1$(MINUS_STRING)"),
+)
+const INVERSE_OPEXPR_REPLACEMENTS = (
+  DAGGER_STRING => "†",
+  UPARROW_STRING => "↑",
+  DOWNARROW_STRING => "↓",
+  PLUS_STRING => "+",
+  MINUS_STRING => "-",
 )
 
 # This compiles operator expressions, such as:
@@ -35,7 +50,7 @@ opexpr(n::Number) = n
 function opexpr(n::Symbol; kwargs...)
   n === :im && return im
   n === :π && return π
-  n = Symbol(replace(String(n), reverse.(OPEXPR_REPLACEMENTS)...))
+  n = Symbol(replace(String(n), INVERSE_OPEXPR_REPLACEMENTS...))
   return OpName{n}(; kwargs...)
 end
 function opexpr(ex::Expr)
@@ -261,6 +276,17 @@ end
 # TODO: Is this a good definition?
 @op_alias "F" "Id"
 
+function Base.AbstractArray(n::OpName"StandardBasis", domain_size::Tuple{Int})
+  a = falses(domain_size..., domain_size...)
+  a[n.index...] = one(Bool)
+  return a
+end
+
+function alias(n::OpName"Proj")
+  return OpName"StandardBasis"(; index=(n.index, n.index))
+end
+@op_alias "proj" "Proj"
+
 # TODO: Define as `::Tuple{Int}`.
 function Base.AbstractArray(n::OpName"a†", domain_size::Tuple{Int})
   d = only(domain_size)
@@ -304,14 +330,16 @@ function Base.AbstractArray(n::OpName"σ⁺", domain_size::Tuple{Int})
   s = (d - 1) / 2
   return [2 * δ(i + 1, j) * √((s + 1) * (i + j - 1) - i * j) for i in 1:d, j in 1:d]
 end
-alias(::OpName"S⁺") = OpName("σ⁺") / 2
-@op_alias "Splus" "S⁺"
-@op_alias "Sp" "S⁺"
+alias(::OpName"S+") = OpName("σ⁺") / 2
+@op_alias "S⁺" "S+"
+@op_alias "Splus" "S+"
+@op_alias "Sp" "S+"
 
 alias(::OpName"σ⁻") = OpName"σ⁺"()'
-alias(::OpName"S⁻") = OpName("σ⁻") / 2
-@op_alias "Sminus" "S⁻"
-@op_alias "Sm" "S⁻"
+alias(::OpName"S-") = OpName("σ⁻") / 2
+@op_alias "S⁻" "S-"
+@op_alias "Sminus" "S-"
+@op_alias "Sm" "S-"
 
 alias(::OpName"X") = (OpName"σ⁺"() + OpName"σ⁻"()) / 2
 @op_alias "σx" "X"

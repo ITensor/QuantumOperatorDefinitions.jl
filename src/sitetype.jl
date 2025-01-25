@@ -16,6 +16,14 @@ macro SiteType_str(s)
 end
 
 alias(t::SiteType) = t
+
+function Base.length(t::SiteType)
+  t′ = alias(t)
+  if t == t′
+    return t.length
+  end
+  return length(t′)
+end
 Base.AbstractUnitRange(t::SiteType) = Base.OneTo(length(t))
 Base.size(t::SiteType) = (length(t),)
 Base.size(t::SiteType, dim::Integer) = size(t)[dim]

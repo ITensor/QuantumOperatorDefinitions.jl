@@ -10,7 +10,22 @@ const elts = (real_elts..., complex_elts...)
   @testset "Qubit/Qudit" begin
     # https://en.wikipedia.org/wiki/Pauli_matrices
     # https://en.wikipedia.org/wiki/Spin_(physics)#Higher_spins
-    for (t, len, Xmat, Ymat, Zmat, Nmat, SWAPmat, iSWAPmat, RXXmat, RYYmat, RZZmat) in (
+    for (
+      t,
+      len,
+      Xmat,
+      Ymat,
+      Zmat,
+      Nmat,
+      SWAPmat,
+      iSWAPmat,
+      RXXmat,
+      RYYmat,
+      RZZmat,
+      Proj1mat,
+      Proj2mat,
+      StandardBasis12mat,
+    ) in (
       (
         SiteType("Qubit"),
         2,
@@ -34,6 +49,9 @@ const elts = (real_elts..., complex_elts...)
         ],
         (_, θ) ->
           Diagonal([exp(-im * θ / 2), exp(im * θ / 2), exp(im * θ / 2), exp(-im * θ / 2)]),
+        [1 0; 0 0],
+        [0 0; 0 1],
+        [0 1; 0 0],
       ),
       (
         SiteType("Qudit"; length=3),
@@ -67,6 +85,9 @@ const elts = (real_elts..., complex_elts...)
         (O, θ) -> exp(-im * (θ / 2) * kron(O, O)),
         (O, θ) -> exp(-im * (θ / 2) * kron(O, O)),
         (O, θ) -> exp(-im * (θ / 2) * kron(O, O)),
+        [1 0 0; 0 0 0; 0 0 0],
+        [0 0 0; 0 1 0; 0 0 0],
+        [0 1 0; 0 0 0; 0 0 0],
       ),
     )
       @test length(t) == len
@@ -102,6 +123,9 @@ const elts = (real_elts..., complex_elts...)
         (OpName("RYY"; θ=π / 3), 2, complex_elts, RYYmat(Ymat, π / 3)),
         (OpName("Rzz"; θ=π / 3), 2, complex_elts, RZZmat(Zmat, π / 3)),
         (OpName("RZZ"; θ=π / 3), 2, complex_elts, RZZmat(Zmat, π / 3)),
+        (OpName("Proj"; index=1), 1, elts, Proj1mat),
+        (OpName("Proj"; index=2), 1, elts, Proj2mat),
+        (OpName("StandardBasis"; index=(1, 2)), 1, elts, StandardBasis12mat),
       )
         @test nsites(o) == nbits
         for arraytype in (AbstractArray, AbstractMatrix, Array, Matrix)
@@ -118,7 +142,13 @@ const elts = (real_elts..., complex_elts...)
       end
     end
   end
-  @testset "Parsing" begin
+  @testset "state" begin
+    @test state(1) == [1, 0]
+    @test state(2) == [0, 1]
+    @test state(1, 3) == [1, 0, 0]
+    @test state(2, 3) == [0, 1, 0]
+  end
+  @testset "op parsing" begin
     @test Matrix(opexpr("X * Y")) == op("X") * op("Y")
     @test op("X * Y") == op("X") * op("Y")
     @test op("X * Y + Z") == op("X") * op("Y") + op("Z")
@@ -127,5 +157,14 @@ const elts = (real_elts..., complex_elts...)
     @test op("exp(im * (X ⊗ Y + Z ⊗ Z))") ==
       exp(im * (kron(op("X"), op("Y")) + kron(op("Z"), op("Z"))))
     @test op("Ry{θ=π/2}") == op("Ry"; θ=π / 2)
+    # Awkward parsing corner cases.
+    @test op("S+") == Matrix(OpName("S+"))
+    @test op("S-") == Matrix(OpName("S-"))
+    @test op("S+ + S-") == Matrix(OpName("S+") + OpName("S-"))
+    @test op("S+ - S-") == Matrix(OpName("S+") - OpName("S-"))
+    @test op("a†") == Matrix(OpName("a†"))
+    for name in ("c↑", "c†↑", "c↓", "c†↓")
+      @test op(name, SiteType("Electron")) == Matrix(OpName(name), SiteType("Electron"))
+    end
   end
 end

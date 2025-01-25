@@ -15,6 +15,8 @@ macro StateName_str(s)
   return StateName{Symbol(s)}
 end
 
+StateName(i::Int; kwargs...) = StateName"StandardBasis"(; index=i, kwargs...)
+
 function state_alias_expr(name1, name2, pars...)
   return :(function alias(n::StateName{Symbol($name1)})
     return StateName{Symbol($name2)}(; params(n)..., $(esc.(pars)...))
@@ -25,6 +27,7 @@ macro state_alias(name1, name2, params...)
 end
 
 # TODO: Decide on this.
+# TODO: Move to `sitetype.jl`.
 default_sitetype() = SiteType"Qubit"()
 
 alias(n::StateName) = n
@@ -66,13 +69,13 @@ function (arrtype::Type{<:AbstractArray})(n::StateName)
   return arrtype(n, ntuple(Returns(default_sitetype()), nsites(n)))
 end
 
-function state(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
+function state(arrtype::Type{<:AbstractArray}, n::Union{Int,String}, domain...; kwargs...)
   return arrtype(StateName(n; kwargs...), domain...)
 end
-function state(elt::Type{<:Number}, n::String, domain...; kwargs...)
+function state(elt::Type{<:Number}, n::Union{Int,String}, domain...; kwargs...)
   return state(AbstractArray{elt}, n, domain...; kwargs...)
 end
-function state(n::String, domain...; kwargs...)
+function state(n::Union{Int,String}, domain...; kwargs...)
   return state(AbstractArray, n, domain...; kwargs...)
 end
 
@@ -81,11 +84,12 @@ end
 ##   return parse(Int, String(N))
 ## end
 
-# TODO: Define as `::Tuple{Int}`.
-function Base.AbstractArray(n::StateName{N}, domain_size::Tuple{Int}) where {N}
-  # TODO: Use `Integer(n)`.
-  n = parse(Int, String(N))
-  a = falses(only(domain_size))
-  a[n + 1] = one(Bool)
+function Base.AbstractArray(n::StateName"StandardBasis", domain_size::Tuple{Int})
+  a = falses(domain_size)
+  a[n.index] = one(Bool)
   return a
+end
+function Base.AbstractArray(n::StateName{N}, domain_size::Tuple{Int}) where {N}
+  index = parse(Int, String(N)) + 1
+  return AbstractArray(StateName"StandardBasis"(; index), domain_size)
 end

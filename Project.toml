@@ -1,7 +1,7 @@
 name = "QuantumOperatorDefinitions"
 uuid = "826dd319-6fd5-459a-a990-3a4f214664bf"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.1.2"
+version = "0.1.3"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
