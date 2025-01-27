@@ -29,3 +29,7 @@ Base.size(t::SiteType) = (length(t),)
 Base.size(t::SiteType, dim::Integer) = size(t)[dim]
 Base.axes(t::SiteType) = (AbstractUnitRange(t),)
 Base.axes(t::SiteType, dim::Integer) = axes(t)[dim]
+
+to_dim(d::Base.OneTo) = length(d)
+to_dim(d::SiteType) = length(d)
+to_dim(d::Integer) = d

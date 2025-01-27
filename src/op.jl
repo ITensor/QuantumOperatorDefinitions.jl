@@ -89,91 +89,6 @@ end
 #   return :(typeof(opexpr($s)))
 # end
 
-for f in (
-  :(Base.sqrt),
-  :(Base.real),
-  :(Base.imag),
-  :(Base.complex),
-  :(Base.exp),
-  :(Base.cis),
-  :(Base.cos),
-  :(Base.sin),
-  :(Base.adjoint),
-  :(Base.:+),
-  :(Base.:-),
-)
-  @eval begin
-    $f(n::OpName) = OpName"f"(; f=$f, op=n)
-  end
-end
-
-# Unary operations
-nsites(n::OpName"f") = nsites(n.op)
-function Base.AbstractArray(n::OpName"f", domain_size::Tuple{Vararg{Int}})
-  return n.f(AbstractArray(n.op, domain_size))
-end
-
-nsites(n::OpName"^") = nsites(n.op)
-function Base.AbstractArray(n::OpName"^", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op, domain_size)^n.exponent
-end
-Base.:^(n::OpName, exponent) = OpName"^"(; op=n, exponent)
-
-nsites(n::OpName"kron") = nsites(n.op1) + nsites(n.op2)
-function Base.AbstractArray(n::OpName"kron", domain_size::Tuple{Vararg{Int}})
-  domain_size1 = domain_size[1:nsites(n.op1)]
-  domain_size2 = domain_size[(nsites(n.op1) + 1):end]
-  @assert length(domain_size2) == nsites(n.op2)
-  return kron(AbstractArray(n.op1, domain_size1), AbstractArray(n.op2, domain_size2))
-end
-Base.kron(n1::OpName, n2::OpName) = OpName"kron"(; op1=n1, op2=n2)
-⊗(n1::OpName, n2::OpName) = kron(n1, n2)
-
-function nsites(n::OpName"+")
-  @assert nsites(n.op1) == nsites(n.op2)
-  return nsites(n.op1)
-end
-function Base.AbstractArray(n::OpName"+", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op1, domain_size) + AbstractArray(n.op2, domain_size)
-end
-Base.:+(n1::OpName, n2::OpName) = OpName"+"(; op1=n1, op2=n2)
-Base.:-(n1::OpName, n2::OpName) = n1 + (-n2)
-
-function nsites(n::OpName"*")
-  @assert nsites(n.op1) == nsites(n.op2)
-  return nsites(n.op1)
-end
-function Base.AbstractArray(n::OpName"*", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op1, domain_size) * AbstractArray(n.op2, domain_size)
-end
-Base.:*(n1::OpName, n2::OpName) = OpName"*"(; op1=n1, op2=n2)
-
-nsites(n::OpName"scaled") = nsites(n.op)
-function Base.AbstractArray(n::OpName"scaled", domain_size::Tuple{Vararg{Int}})
-  return AbstractArray(n.op, domain_size) * n.c
-end
-function Base.:*(c::Number, n::OpName)
-  return OpName"scaled"(; op=n, c)
-end
-function Base.:*(n::OpName, c::Number)
-  return OpName"scaled"(; op=n, c)
-end
-function Base.:/(n::OpName, c::Number)
-  return OpName"scaled"(; op=n, c=inv(c))
-end
-
-function Base.:*(c::Number, n::OpName"scaled")
-  return OpName"scaled"(; op=n.op, c=(c * n.c))
-end
-function Base.:*(n::OpName"scaled", c::Number)
-  return OpName"scaled"(; op=n.op, c=(n.c * c))
-end
-function Base.:/(n::OpName"scaled", c::Number)
-  return OpName"scaled"(; op=n.op, c=(n.c / c))
-end
-
-controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, op=n)
-
 function op_alias_expr(name1, name2, pars...)
   return :(function alias(n::OpName{Symbol($name1)})
     return OpName{Symbol($name2)}(; params(n)..., $(esc.(pars)...))
@@ -186,57 +101,54 @@ end
 alias(n::OpName) = n
 function op_convert(
   arrtype::Type{<:AbstractArray{<:Any,N}},
-  domain_size::Tuple{Vararg{Integer}},
+  domain::Tuple{Vararg{Integer}},
   a::AbstractArray{<:Any,N},
 ) where {N}
   # TODO: Check the dimensions.
   return convert(arrtype, a)
 end
 function op_convert(
-  arrtype::Type{<:AbstractArray}, domain_size::Tuple{Vararg{Integer}}, a::AbstractArray
+  arrtype::Type{<:AbstractArray}, domain::Tuple{Vararg{Integer}}, a::AbstractArray
 )
   # TODO: Check the dimensions.
   return convert(arrtype, a)
 end
 function op_convert(
-  arrtype::Type{<:AbstractArray{<:Any,N}},
-  domain_size::Tuple{Vararg{Integer}},
-  a::AbstractArray,
+  arrtype::Type{<:AbstractArray{<:Any,N}}, domain::Tuple{Vararg{Integer}}, a::AbstractArray
 ) where {N}
-  size = (domain_size..., domain_size...)
+  size = (domain..., domain...)
   @assert length(size) == N
   return convert(arrtype, reshape(a, size))
 end
 function (arrtype::Type{<:AbstractArray})(n::OpName, ts::Tuple{Vararg{SiteType}})
-  return op_convert(arrtype, length.(ts), AbstractArray(n, ts))
+  return op_convert(arrtype, length.(ts), n(ts...))
 end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain_size::Tuple{Vararg{Integer}})
-  return op_convert(arrtype, domain_size, AbstractArray(n, Int.(domain_size)))
+function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{Integer}})
+  return op_convert(arrtype, domain, n(Int.(domain)...))
 end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain_size::Integer...)
-  return arrtype(n, domain_size)
+function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Integer...)
+  return arrtype(n, domain)
 end
 (arrtype::Type{<:AbstractArray})(n::OpName, ts::SiteType...) = arrtype(n, ts)
-Base.AbstractArray(n::OpName, ts::SiteType...) = AbstractArray(n, ts)
-function Base.AbstractArray(n::OpName, ts::Tuple{Vararg{SiteType}})
+
+alias(i::Integer) = i
+
+function (n::OpName)(domain...)
+  # TODO: Try one alias at a time?
+  # TODO: First call `alias(n, domain...)`
+  # to allow for aliases specific to certain
+  # SiteTypes?
   n′ = alias(n)
-  ts′ = alias.(ts)
-  if n′ == n && ts′ == ts
-    return AbstractArray(n′, length.(ts′))
-  end
-  return AbstractArray(n′, ts′)
-end
-function Base.AbstractArray(n::OpName, domain_size::Tuple{Vararg{Int}})
-  n′ = alias(n)
-  if n′ == n
+  domain′ = alias.(domain)
+  if n′ == n && domain′ == domain
     error("Not implemented.")
   end
-  return AbstractArray(n′, domain_size)
+  return n′(domain′...)
 end
 
 # TODO: Decide on this.
-function Base.AbstractArray(n::OpName)
-  return AbstractArray(n, ntuple(Returns(default_sitetype()), nsites(n)))
+function (n::OpName)()
+  return n(ntuple(Returns(default_sitetype()), nsites(n))...)
 end
 function (arrtype::Type{<:AbstractArray})(n::OpName)
   return arrtype(n, ntuple(Returns(default_sitetype()), nsites(n)))
@@ -262,12 +174,99 @@ function nsites(n::Union{StateName,OpName})
   return nsites(n′)
 end
 
-using LinearAlgebra: Diagonal
-function Base.AbstractArray(::OpName"Id", domain_size::Tuple{Int})
-  return Diagonal(trues(only(domain_size)))
+# Lazy OpName operations.
+for f in (
+  :(Base.sqrt),
+  :(Base.real),
+  :(Base.imag),
+  :(Base.complex),
+  :(Base.exp),
+  :(Base.cis),
+  :(Base.cos),
+  :(Base.sin),
+  :(Base.adjoint),
+  :(Base.:+),
+  :(Base.:-),
+)
+  @eval begin
+    $f(n::OpName) = OpName"f"(; f=$f, op=n)
+  end
 end
-function Base.AbstractArray(n::OpName"Id", domain_size::Tuple{Int,Vararg{Int}})
-  return Base.AbstractArray(kron(ntuple(Returns(n), length(domain_size))...), domain_size)
+
+# Unary operations
+nsites(n::OpName"f") = nsites(n.op)
+function (n::OpName"f")(domain...)
+  return n.f(n.op(domain...))
+end
+
+nsites(n::OpName"^") = nsites(n.op)
+function (n::OpName"^")(domain...)
+  return n.op(domain...)^n.exponent
+end
+Base.:^(n::OpName, exponent) = OpName"^"(; op=n, exponent)
+
+nsites(n::OpName"kron") = nsites(n.op1) + nsites(n.op2)
+function (n::OpName"kron")(domain...)
+  domain1 = domain[1:nsites(n.op1)]
+  domain2 = domain[(nsites(n.op1) + 1):end]
+  @assert length(domain2) == nsites(n.op2)
+  return kron(n.op1(domain1...), n.op2(domain2...))
+end
+Base.kron(n1::OpName, n2::OpName) = OpName"kron"(; op1=n1, op2=n2)
+⊗(n1::OpName, n2::OpName) = kron(n1, n2)
+
+function nsites(n::OpName"+")
+  @assert nsites(n.op1) == nsites(n.op2)
+  return nsites(n.op1)
+end
+function (n::OpName"+")(domain...)
+  return n.op1(domain...) + n.op2(domain...)
+end
+Base.:+(n1::OpName, n2::OpName) = OpName"+"(; op1=n1, op2=n2)
+Base.:-(n1::OpName, n2::OpName) = n1 + (-n2)
+
+function nsites(n::OpName"*")
+  @assert nsites(n.op1) == nsites(n.op2)
+  return nsites(n.op1)
+end
+function (n::OpName"*")(domain...)
+  return n.op1(domain...) * n.op2(domain...)
+end
+Base.:*(n1::OpName, n2::OpName) = OpName"*"(; op1=n1, op2=n2)
+
+nsites(n::OpName"scaled") = nsites(n.op)
+function (n::OpName"scaled")(domain...)
+  return n.op(domain...) * n.c
+end
+function Base.:*(c::Number, n::OpName)
+  return OpName"scaled"(; op=n, c)
+end
+function Base.:*(n::OpName, c::Number)
+  return OpName"scaled"(; op=n, c)
+end
+function Base.:/(n::OpName, c::Number)
+  return OpName"scaled"(; op=n, c=inv(c))
+end
+
+function Base.:*(c::Number, n::OpName"scaled")
+  return OpName"scaled"(; op=n.op, c=(c * n.c))
+end
+function Base.:*(n::OpName"scaled", c::Number)
+  return OpName"scaled"(; op=n.op, c=(n.c * c))
+end
+function Base.:/(n::OpName"scaled", c::Number)
+  return OpName"scaled"(; op=n.op, c=(n.c / c))
+end
+
+controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, op=n)
+
+using LinearAlgebra: Diagonal
+function (::OpName"Id")(domain)
+  return Diagonal(trues(to_dim(domain)))
+end
+function (n::OpName"Id")(domain1, domain_rest...)
+  domain = (domain1, domain_rest)
+  return kron(ntuple(Returns(n), length(domain))...)(domain...)
 end
 @op_alias "I" "Id"
 @op_alias "σ0" "Id"
@@ -276,8 +275,9 @@ end
 # TODO: Is this a good definition?
 @op_alias "F" "Id"
 
-function Base.AbstractArray(n::OpName"StandardBasis", domain_size::Tuple{Int})
-  a = falses(domain_size..., domain_size...)
+function (n::OpName"StandardBasis")(domain)
+  d = to_dim(domain)
+  a = falses(d, d)
   a[n.index...] = one(Bool)
   return a
 end
@@ -287,9 +287,8 @@ function alias(n::OpName"Proj")
 end
 @op_alias "proj" "Proj"
 
-# TODO: Define as `::Tuple{Int}`.
-function Base.AbstractArray(n::OpName"a†", domain_size::Tuple{Int})
-  d = only(domain_size)
+function (n::OpName"a†")(domain)
+  d = to_dim(domain)
   a = zeros(d, d)
   for k in 1:(d - 1)
     a[k + 1, k] = √k
@@ -325,8 +324,8 @@ alias(::OpName"a†a†") = OpName("a†") ⊗ OpName("a†")
 # https://en.wikipedia.org/wiki/Generalizations_of_Pauli_matrices
 # https://en.wikipedia.org/wiki/Generalized_Clifford_algebra
 # https://github.com/QuantumKitHub/MPSKitModels.jl/blob/v0.4.0/src/operators/spinoperators.jl
-function Base.AbstractArray(n::OpName"σ⁺", domain_size::Tuple{Int})
-  d = only(domain_size)
+function (n::OpName"σ⁺")(domain)
+  d = to_dim(domain)
   s = (d - 1) / 2
   return [2 * δ(i + 1, j) * √((s + 1) * (i + j - 1) - i * j) for i in 1:d, j in 1:d]
 end
@@ -357,9 +356,13 @@ alias(n::OpName"Sx") = OpName"X"() / 2
 @op_alias "Sₓ" "Sx"
 alias(::OpName"Sx2") = OpName"Sx"()^2
 
+# Generic rotation.
+# exp(-im * θ / 2 * O)
+alias(n::OpName"R") = cis(-(n.θ / 2) * n.op)
+
 # Rotation around X-axis
-# exp(-im * n.θ / 2 * X)
-alias(n::OpName"Rx") = cis(-(n.θ / 2) * OpName"X"())
+# exp(-im * θ / 2 * X)
+alias(n::OpName"Rx") = OpName"R"(; params(n)..., op=OpName"X"())
 
 alias(::OpName"Y") = -im * (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 # TODO: No subsript `\_y` available
@@ -383,22 +386,22 @@ alias(n::OpName"iSy") = OpName"iY"() / 2
 alias(::OpName"Sy2") = -OpName"iSy"()^2
 
 # Rotation around Y-axis
-# exp(-im * n.θ / 2 * Y)
-alias(n::OpName"Ry") = exp(-(n.θ / 2) * OpName"iY"())
+# exp(-im * θ / 2 * Y) = exp(-θ / 2 * iY)
+alias(n::OpName"Ry") = OpName"R"(; params(n)..., op=OpName"Y"())
 
 # Ising (XX) coupling gate
 # exp(-im * θ/2 * X ⊗ X)
-alias(n::OpName"Rxx") = exp(-im * (n.θ / 2) * OpName"X"() ⊗ OpName"X"())
+alias(n::OpName"Rxx") = OpName"R"(; params(n)..., op=OpName"X"() ⊗ OpName"X"())
 @op_alias "RXX" "Rxx"
 
 # Ising (YY) coupling gate
 # exp(-im * θ/2 * Y ⊗ Y)
-alias(n::OpName"Ryy") = exp(-im * (n.θ / 2) * OpName"Y"() ⊗ OpName"Y"())
+alias(n::OpName"Ryy") = OpName"R"(; params(n)..., op=OpName"Y"() ⊗ OpName"Y"())
 @op_alias "RYY" "Ryy"
 
 # Ising (ZZ) coupling gate
 # exp(-im * θ/2 * Z ⊗ Z)
-alias(n::OpName"Rzz") = exp(-im * (n.θ / 2) * OpName"Z"() ⊗ OpName"Z"())
+alias(n::OpName"Rzz") = OpName"R"(; params(n)..., op=OpName"Z"() ⊗ OpName"Z"())
 @op_alias "RZZ" "Rzz"
 
 ## TODO: Check this definition and see if it is worth defining this.
@@ -407,8 +410,8 @@ alias(n::OpName"Rzz") = exp(-im * (n.θ / 2) * OpName"Z"() ⊗ OpName"Z"())
 ## alias(n::OpName"Rxy") = exp(-im * (n.θ / 2) * OpName"X"() ⊗ OpName"Y"())
 ## @op_alias "RXY" "Rxy"
 
-function Base.AbstractArray(n::OpName"σᶻ", domain_size::Tuple{Int})
-  d = only(domain_size)
+function (n::OpName"σᶻ")(domain)
+  d = to_dim(domain)
   s = (d - 1) / 2
   return Diagonal([2 * (s + 1 - i) for i in 1:d])
 end
@@ -435,23 +438,24 @@ alias(n::OpName"S2") = OpName"Sx2"() + OpName"Sy2"() + OpName"Sz2"()
 alias(::OpName"Sz2") = OpName"Sz"()^2
 
 # Rotation around Z-axis
-# exp(-im * n.θ / 2 * Z)
-alias(n::OpName"Rz") = exp(-im * (n.θ / 2) * OpName"Z"())
+# exp(-im * θ / 2 * Z)
+alias(n::OpName"Rz") = OpName"R"(; params(n)..., op=OpName"Z"())
 
 using LinearAlgebra: eigen
-function Base.AbstractArray(n::OpName"H", domain_size::Tuple{Int})
-  Λ, H = eigen(AbstractArray(OpName("X"), domain_size))
+function (n::OpName"H")(domain)
+  Λ, H = eigen(OpName("X")(domain))
   p = sortperm(Λ; rev=true)
   return H[:, p]
 end
 
 using LinearAlgebra: Diagonal
 nsites(::OpName"SWAP") = 2
-function Base.AbstractArray(::OpName"SWAP", domain_size::Tuple{Int,Int})
-  I_matrix = Diagonal(trues(prod(domain_size)))
-  I_array = reshape(I_matrix, (domain_size..., domain_size...))
+function (::OpName"SWAP")(domain1, domain2)
+  domain = to_dim.((domain1, domain2))
+  I_matrix = Diagonal(trues(prod(domain)))
+  I_array = reshape(I_matrix, (domain..., domain...))
   SWAP_array = permutedims(I_array, (2, 1, 3, 4))
-  SWAP_matrix = reshape(SWAP_array, (prod(domain_size), prod(domain_size)))
+  SWAP_matrix = reshape(SWAP_array, (prod(domain), prod(domain)))
   return SWAP_matrix
 end
 @op_alias "Swap" "SWAP"
@@ -460,8 +464,9 @@ alias(::OpName"√SWAP") = √(OpName"SWAP"())
 
 using LinearAlgebra: diagind
 nsites(::OpName"iSWAP") = 2
-function Base.AbstractArray(::OpName"iSWAP", domain_size::Tuple{Int,Int})
-  swap = AbstractArray(OpName"SWAP"(), domain_size)
+function (::OpName"iSWAP")(domain1, domain2)
+  domain = (domain1, domain2)
+  swap = OpName"SWAP"()(domain...)
   iswap = im * swap
   iswap[diagind(iswap)] .*= -im
   return iswap

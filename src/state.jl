@@ -36,13 +36,13 @@ function (arrtype::Type{<:AbstractArray})(n::StateName, ts::Tuple{Vararg{SiteTyp
   # to higher order arrays.
   return convert(arrtype, AbstractArray(n, ts))
 end
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain_size::Tuple{Vararg{Integer}})
+function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{Integer}})
   # TODO: Define `state_convert` to handle reshaping multisite states
   # to higher order arrays.
-  return convert(arrtype, AbstractArray(n, Int.(domain_size)))
+  return convert(arrtype, AbstractArray(n, Int.(domain)))
 end
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain_size::Integer...)
-  return arrtype(n, domain_size)
+function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Integer...)
+  return arrtype(n, domain)
 end
 (arrtype::Type{<:AbstractArray})(n::StateName, ts::SiteType...) = arrtype(n, ts)
 function Base.AbstractArray(n::StateName, ts::Tuple{Vararg{SiteType}})
@@ -53,12 +53,12 @@ function Base.AbstractArray(n::StateName, ts::Tuple{Vararg{SiteType}})
   end
   return AbstractArray(n′, ts′)
 end
-function Base.AbstractArray(n::StateName, domain_size::Tuple{Vararg{Int}})
+function Base.AbstractArray(n::StateName, domain::Tuple{Vararg{Int}})
   n′ = alias(n)
   if n′ == n
     error("Not implemented.")
   end
-  return AbstractArray(n′, domain_size)
+  return AbstractArray(n′, domain)
 end
 
 # TODO: Decide on this.
@@ -84,12 +84,12 @@ end
 ##   return parse(Int, String(N))
 ## end
 
-function Base.AbstractArray(n::StateName"StandardBasis", domain_size::Tuple{Int})
-  a = falses(domain_size)
+function Base.AbstractArray(n::StateName"StandardBasis", domain::Tuple{Int})
+  a = falses(domain)
   a[n.index] = one(Bool)
   return a
 end
-function Base.AbstractArray(n::StateName{N}, domain_size::Tuple{Int}) where {N}
+function Base.AbstractArray(n::StateName{N}, domain::Tuple{Int}) where {N}
   index = parse(Int, String(N)) + 1
-  return AbstractArray(StateName"StandardBasis"(; index), domain_size)
+  return AbstractArray(StateName"StandardBasis"(; index), domain)
 end

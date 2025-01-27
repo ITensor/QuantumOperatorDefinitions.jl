@@ -1,5 +1,7 @@
 Base.length(::SiteType"tJ") = 3
 
+# TODO: Define in terms of `"Electron"` with slicing.
+
 Base.AbstractArray(::StateName"Emp", ::SiteType"tJ") = [1.0, 0, 0]
 Base.AbstractArray(::StateName"Up", ::SiteType"tJ") = [0.0, 1, 0]
 Base.AbstractArray(::StateName"Dn", ::SiteType"tJ") = [0.0, 0, 1]
