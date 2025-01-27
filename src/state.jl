@@ -1,3 +1,5 @@
+using Random: randstring
+
 struct StateName{Name,Params}
   params::Params
 end
@@ -15,7 +17,9 @@ macro StateName_str(s)
   return StateName{Symbol(s)}
 end
 
-StateName(i::Int; kwargs...) = StateName"StandardBasis"(; index=i, kwargs...)
+# Handles special case `state(1) == [1, 0]`. Note the
+# one-based indexing, as opposed to `state("0") == [1, 0]`.
+StateName(i::Integer; kwargs...) = StateName"StandardBasis"(; index=i, kwargs...)
 
 function state_alias_expr(name1, name2, pars...)
   return :(function alias(n::StateName{Symbol($name1)})
@@ -26,51 +30,89 @@ macro state_alias(name1, name2, params...)
   return state_alias_expr(name1, name2)
 end
 
-# TODO: Decide on this.
-# TODO: Move to `sitetype.jl`.
-default_sitetype() = SiteType"Qubit"()
-
-alias(n::StateName) = n
-function (arrtype::Type{<:AbstractArray})(n::StateName, ts::Tuple{Vararg{SiteType}})
+function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{SiteType}})
   # TODO: Define `state_convert` to handle reshaping multisite states
   # to higher order arrays.
-  return convert(arrtype, AbstractArray(n, ts))
+  return convert(arrtype, n(domain...))
 end
 function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{Integer}})
   # TODO: Define `state_convert` to handle reshaping multisite states
   # to higher order arrays.
-  return convert(arrtype, AbstractArray(n, Int.(domain)))
-end
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Integer...)
-  return arrtype(n, domain)
-end
-(arrtype::Type{<:AbstractArray})(n::StateName, ts::SiteType...) = arrtype(n, ts)
-function Base.AbstractArray(n::StateName, ts::Tuple{Vararg{SiteType}})
-  n′ = alias(n)
-  ts′ = alias.(ts)
-  if n′ == n && ts′ == ts
-    return AbstractArray(n′, length.(ts′))
-  end
-  return AbstractArray(n′, ts′)
-end
-function Base.AbstractArray(n::StateName, domain::Tuple{Vararg{Int}})
-  n′ = alias(n)
-  if n′ == n
-    error("Not implemented.")
-  end
-  return AbstractArray(n′, domain)
+  return convert(arrtype, n(Int.(domain)...))
 end
 
-# TODO: Decide on this.
-function Base.AbstractArray(n::StateName)
-  return AbstractArray(n, ntuple(Returns(default_sitetype()), nsites(n)))
+# This compiles operator expressions, such as:
+# ```julia
+# stateexpr("0 + 1") == StateName("0") + StateName("1")
+# ```
+function stateexpr(n::String; kwargs...)
+  return state_or_op_expr(StateName, n; kwargs...)
 end
-function (arrtype::Type{<:AbstractArray})(n::StateName)
-  return arrtype(n, ntuple(Returns(default_sitetype()), nsites(n)))
+
+# Handles special case `state(1) == [1, 0]`. Note the
+# one-based indexing, as opposed to `state("0") == [1, 0]`.
+stateexpr(n::Integer; kwargs...) = StateName(n; kwargs...)
+
+const DAGGER_STRING = randstring()
+const UPARROW_STRING = randstring()
+const DOWNARROW_STRING = randstring()
+const PLUS_STRING = randstring()
+const MINUS_STRING = randstring()
+const EXPR_REPLACEMENTS = (
+  "†" => DAGGER_STRING,
+  "↑" => UPARROW_STRING,
+  "↓" => DOWNARROW_STRING,
+  # Replace trailing plus and minus characters
+  # in operators, which don't parse properly.
+  r"(\S)\+" => SubstitutionString("\\1$(PLUS_STRING)"),
+  r"(\S)\-" => SubstitutionString("\\1$(MINUS_STRING)"),
+)
+const INVERSE_EXPR_REPLACEMENTS = (
+  DAGGER_STRING => "†",
+  UPARROW_STRING => "↑",
+  DOWNARROW_STRING => "↓",
+  PLUS_STRING => "+",
+  MINUS_STRING => "-",
+)
+
+function state_or_op_expr(ntype::Type, n::String; kwargs...)
+  n = replace(n, EXPR_REPLACEMENTS...)
+  depth = 1
+  return state_or_op_expr(ntype, Meta.parse(n), depth; kwargs...)
+end
+function state_or_op_expr(ntype::Type, n::Number, depth::Int; kwargs...)
+  if depth == 1
+    return ntype{Symbol(n)}(; kwargs...)
+  end
+  return n
+end
+function state_or_op_expr(ntype::Type, n::Symbol, depth::Int; kwargs...)
+  n === :im && return im
+  n === :π && return π
+  n = Symbol(replace(String(n), INVERSE_EXPR_REPLACEMENTS...))
+  return ntype{n}(; kwargs...)
+end
+function state_or_op_expr(ntype::Type, ex::Expr, depth::Int)
+  if Meta.isexpr(ex, :call)
+    return eval(ex.args[1])(state_or_op_expr.(ntype, ex.args[2:end], depth + 1)...)
+  end
+  if Meta.isexpr(ex, :curly)
+    # Syntax for parametrized gates, i.e.
+    # `state_or_op_expr("Ry{θ=π/2}")`.
+    params = ex.args[2:end]
+    kwargs = Dict(
+      map(params) do param
+        @assert Meta.isexpr(param, :(=))
+        return param.args[1] => eval(param.args[2])
+      end,
+    )
+    return ntype{ex.args[1]}(; kwargs...)
+  end
+  return error("Can't parse expression $ex.")
 end
 
 function state(arrtype::Type{<:AbstractArray}, n::Union{Int,String}, domain...; kwargs...)
-  return arrtype(StateName(n; kwargs...), domain...)
+  return arrtype(stateexpr(n; kwargs...), domain...)
 end
 function state(elt::Type{<:Number}, n::Union{Int,String}, domain...; kwargs...)
   return state(AbstractArray{elt}, n, domain...; kwargs...)
@@ -79,17 +121,16 @@ function state(n::Union{Int,String}, domain...; kwargs...)
   return state(AbstractArray, n, domain...; kwargs...)
 end
 
-# TODO: Add this.
-## function Base.Integer(::StateName{N}) where {N}
-##   return parse(Int, String(N))
-## end
-
-function Base.AbstractArray(n::StateName"StandardBasis", domain::Tuple{Int})
-  a = falses(domain)
+function (n::StateName"StandardBasis")(domain)
+  a = falses(to_dim(domain))
   a[n.index] = one(Bool)
   return a
 end
-function Base.AbstractArray(n::StateName{N}, domain::Tuple{Int}) where {N}
-  index = parse(Int, String(N)) + 1
-  return AbstractArray(StateName"StandardBasis"(; index), domain)
+function (n::StateName{N})(domain) where {N}
+  n′ = alias(n)
+  if n == n′
+    index = parse(Int, String(N)) + 1
+    return StateName"StandardBasis"(; index)(domain)
+  end
+  return n′(domain)
 end

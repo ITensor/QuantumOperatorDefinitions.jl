@@ -85,19 +85,19 @@ end
 @op_alias "Fdn" "F↓"
 
 function (n::OpName"SpinOp")(::SiteType"Electron")
-  return cat(falses(1, 1), n.op(2), falses(1, 1); dims=(1, 2))
+  return cat(falses(1, 1), n.arg(2), falses(1, 1); dims=(1, 2))
 end
 
 # These implicitly define other spin operators.
-# TODO: Maybe require calling it as `OpName("SpinOp"; op=OpName("Sz"))`?
+# TODO: Maybe require calling it as `OpName("SpinOp"; arg=OpName("Sz"))`?
 function (n::OpName"σ⁺")(domain::SiteType"Electron")
-  return OpName"SpinOp"(; op=n)(domain)
+  return OpName"SpinOp"(; arg=n)(domain)
 end
 function (n::OpName"σᶻ")(domain::SiteType"Electron")
-  return OpName"SpinOp"(; op=n)(domain)
+  return OpName"SpinOp"(; arg=n)(domain)
 end
 function (n::OpName"R")(domain::SiteType"Electron")
-  return OpName"SpinOp"(; op=n)(domain)
+  return OpName"SpinOp"(; arg=n)(domain)
 end
 
 has_fermion_string(::OpName"c↑", ::SiteType"Electron") = true

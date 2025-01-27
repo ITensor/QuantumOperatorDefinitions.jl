@@ -16,6 +16,7 @@ macro SiteType_str(s)
 end
 
 alias(t::SiteType) = t
+alias(i::Integer) = i
 
 function Base.length(t::SiteType)
   t′ = alias(t)
@@ -33,3 +34,7 @@ Base.axes(t::SiteType, dim::Integer) = axes(t)[dim]
 to_dim(d::Base.OneTo) = length(d)
 to_dim(d::SiteType) = length(d)
 to_dim(d::Integer) = d
+
+# TODO: Decide on this.
+# TODO: Move to `sitetype.jl`.
+default_sitetype() = SiteType"Qubit"()

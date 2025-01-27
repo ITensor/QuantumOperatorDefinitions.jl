@@ -1,5 +1,3 @@
-using Random: randstring
-
 struct OpName{Name,Params}
   function OpName{Name,Params}(params::NamedTuple) where {Name,Params}
     return new{Name,(; Params..., params...)}()
@@ -15,61 +13,13 @@ OpName{Name,Params}(; kwargs...) where {Name,Params} = OpName{Name,Params}((; kw
 OpName{N}(params::NamedTuple) where {N} = OpName{N,params}()
 OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
 
-const DAGGER_STRING = randstring()
-const UPARROW_STRING = randstring()
-const DOWNARROW_STRING = randstring()
-const PLUS_STRING = randstring()
-const MINUS_STRING = randstring()
-const OPEXPR_REPLACEMENTS = (
-  "†" => DAGGER_STRING,
-  "↑" => UPARROW_STRING,
-  "↓" => DOWNARROW_STRING,
-  # Replace trailing plus and minus characters
-  # in operators, which don't parse properly.
-  r"(\S)\+" => SubstitutionString("\\1$(PLUS_STRING)"),
-  r"(\S)\-" => SubstitutionString("\\1$(MINUS_STRING)"),
-)
-const INVERSE_OPEXPR_REPLACEMENTS = (
-  DAGGER_STRING => "†",
-  UPARROW_STRING => "↑",
-  DOWNARROW_STRING => "↓",
-  PLUS_STRING => "+",
-  MINUS_STRING => "-",
-)
-
 # This compiles operator expressions, such as:
 # ```julia
 # opexpr("X + Y") == OpName("X") + OpName("Y")
 # opexpr("Ry{θ=π/2}") == OpName("Ry"; θ=π/2)
 # ```
 function opexpr(n::String; kwargs...)
-  n = replace(n, OPEXPR_REPLACEMENTS...)
-  return opexpr(Meta.parse(n); kwargs...)
-end
-opexpr(n::Number) = n
-function opexpr(n::Symbol; kwargs...)
-  n === :im && return im
-  n === :π && return π
-  n = Symbol(replace(String(n), INVERSE_OPEXPR_REPLACEMENTS...))
-  return OpName{n}(; kwargs...)
-end
-function opexpr(ex::Expr)
-  if Meta.isexpr(ex, :call)
-    return eval(ex.args[1])(opexpr.(ex.args[2:end])...)
-  end
-  if Meta.isexpr(ex, :curly)
-    # Syntax for parametrized gates, i.e.
-    # `opexpr("Ry{θ=π/2}")`.
-    params = ex.args[2:end]
-    kwargs = Dict(
-      map(params) do param
-        @assert Meta.isexpr(param, :(=))
-        return param.args[1] => eval(param.args[2])
-      end,
-    )
-    return OpName{ex.args[1]}(; kwargs...)
-  end
-  return error("Can't parse expression $ex.")
+  return state_or_op_expr(OpName, n; kwargs...)
 end
 
 # TODO: Should this parse the string?
@@ -88,6 +38,9 @@ end
 # macro opexpr_str(s)
 #   return :(typeof(opexpr($s)))
 # end
+# macro statexpr_str(s)
+#   return :(typeof(stateexpr($s)))
+# end
 
 function op_alias_expr(name1, name2, pars...)
   return :(function alias(n::OpName{Symbol($name1)})
@@ -98,7 +51,42 @@ macro op_alias(name1, name2, pars...)
   return op_alias_expr(name1, name2, pars...)
 end
 
-alias(n::OpName) = n
+# Generic to `StateName` or `OpName`.
+const StateOrOpName = Union{StateName,OpName}
+alias(n::StateOrOpName) = n
+function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Integer...)
+  return arrtype(n, domain)
+end
+(arrtype::Type{<:AbstractArray})(n::StateOrOpName, ts::SiteType...) = arrtype(n, ts)
+function (n::StateOrOpName)(domain...)
+  # TODO: Try one alias at a time?
+  # TODO: First call `alias(n, domain...)`
+  # to allow for aliases specific to certain
+  # SiteTypes?
+  n′ = alias(n)
+  domain′ = alias.(domain)
+  if n′ == n && domain′ == domain
+    error("Not implemented.")
+  end
+  return n′(domain′...)
+end
+# TODO: Decide on this.
+function (n::StateOrOpName)()
+  return n(ntuple(Returns(default_sitetype()), nsites(n))...)
+end
+function (arrtype::Type{<:AbstractArray})(n::StateOrOpName)
+  return arrtype(n, ntuple(Returns(default_sitetype()), nsites(n)))
+end
+# `Int(ndims // 2)`, i.e. `ndims_domain`/`ndims_codomain`.
+function nsites(n::StateOrOpName)
+  n′ = alias(n)
+  if n′ == n
+    # Default value, assume 1-site operator/state.
+    return 1
+  end
+  return nsites(n′)
+end
+
 function op_convert(
   arrtype::Type{<:AbstractArray{<:Any,N}},
   domain::Tuple{Vararg{Integer}},
@@ -120,38 +108,11 @@ function op_convert(
   @assert length(size) == N
   return convert(arrtype, reshape(a, size))
 end
-function (arrtype::Type{<:AbstractArray})(n::OpName, ts::Tuple{Vararg{SiteType}})
-  return op_convert(arrtype, length.(ts), n(ts...))
+function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{SiteType}})
+  return op_convert(arrtype, length.(domain), n(domain...))
 end
 function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{Integer}})
   return op_convert(arrtype, domain, n(Int.(domain)...))
-end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Integer...)
-  return arrtype(n, domain)
-end
-(arrtype::Type{<:AbstractArray})(n::OpName, ts::SiteType...) = arrtype(n, ts)
-
-alias(i::Integer) = i
-
-function (n::OpName)(domain...)
-  # TODO: Try one alias at a time?
-  # TODO: First call `alias(n, domain...)`
-  # to allow for aliases specific to certain
-  # SiteTypes?
-  n′ = alias(n)
-  domain′ = alias.(domain)
-  if n′ == n && domain′ == domain
-    error("Not implemented.")
-  end
-  return n′(domain′...)
-end
-
-# TODO: Decide on this.
-function (n::OpName)()
-  return n(ntuple(Returns(default_sitetype()), nsites(n))...)
-end
-function (arrtype::Type{<:AbstractArray})(n::OpName)
-  return arrtype(n, ntuple(Returns(default_sitetype()), nsites(n)))
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
@@ -164,101 +125,126 @@ function op(n::String, domain...; kwargs...)
   return op(AbstractArray, n, domain...; kwargs...)
 end
 
-# `Int(ndims // 2)`, i.e. `ndims_domain`/`ndims_codomain`.
-function nsites(n::Union{StateName,OpName})
-  n′ = alias(n)
-  if n′ == n
-    # Default value, assume 1-site operator/state.
-    return 1
-  end
-  return nsites(n′)
-end
-
-# Lazy OpName operations.
-for f in (
-  :(Base.sqrt),
-  :(Base.real),
-  :(Base.imag),
-  :(Base.complex),
-  :(Base.exp),
-  :(Base.cis),
-  :(Base.cos),
-  :(Base.sin),
-  :(Base.adjoint),
-  :(Base.:+),
-  :(Base.:-),
-)
-  @eval begin
-    $f(n::OpName) = OpName"f"(; f=$f, op=n)
-  end
-end
-
 # Unary operations
-nsites(n::OpName"f") = nsites(n.op)
-function (n::OpName"f")(domain...)
-  return n.f(n.op(domain...))
+for nametype in (:StateName, :OpName)
+  applied = :($(nametype){:applied})
+  @eval begin
+    nsites(n::$(applied)) = nsites(n.arg)
+    function (n::$(applied))(domain...)
+      return n.f(n.arg(domain...))
+    end
+  end
+  for f in (
+    :(Base.real),
+    :(Base.imag),
+    :(Base.complex),
+    # :(Base.adjoint), # Decide on this, since this becomes a matrix.
+    :(Base.:+),
+    :(Base.:-),
+  )
+    @eval begin
+      $f(n::$(nametype)) = $(applied)(; f=$f, arg=n)
+    end
+  end
 end
 
-nsites(n::OpName"^") = nsites(n.op)
-function (n::OpName"^")(domain...)
-  return n.op(domain...)^n.exponent
-end
-Base.:^(n::OpName, exponent) = OpName"^"(; op=n, exponent)
-
-nsites(n::OpName"kron") = nsites(n.op1) + nsites(n.op2)
-function (n::OpName"kron")(domain...)
-  domain1 = domain[1:nsites(n.op1)]
-  domain2 = domain[(nsites(n.op1) + 1):end]
-  @assert length(domain2) == nsites(n.op2)
-  return kron(n.op1(domain1...), n.op2(domain2...))
-end
-Base.kron(n1::OpName, n2::OpName) = OpName"kron"(; op1=n1, op2=n2)
-⊗(n1::OpName, n2::OpName) = kron(n1, n2)
-
-function nsites(n::OpName"+")
-  @assert nsites(n.op1) == nsites(n.op2)
-  return nsites(n.op1)
-end
-function (n::OpName"+")(domain...)
-  return n.op1(domain...) + n.op2(domain...)
-end
-Base.:+(n1::OpName, n2::OpName) = OpName"+"(; op1=n1, op2=n2)
-Base.:-(n1::OpName, n2::OpName) = n1 + (-n2)
-
-function nsites(n::OpName"*")
-  @assert nsites(n.op1) == nsites(n.op2)
-  return nsites(n.op1)
-end
-function (n::OpName"*")(domain...)
-  return n.op1(domain...) * n.op2(domain...)
-end
-Base.:*(n1::OpName, n2::OpName) = OpName"*"(; op1=n1, op2=n2)
-
-nsites(n::OpName"scaled") = nsites(n.op)
-function (n::OpName"scaled")(domain...)
-  return n.op(domain...) * n.c
-end
-function Base.:*(c::Number, n::OpName)
-  return OpName"scaled"(; op=n, c)
-end
-function Base.:*(n::OpName, c::Number)
-  return OpName"scaled"(; op=n, c)
-end
-function Base.:/(n::OpName, c::Number)
-  return OpName"scaled"(; op=n, c=inv(c))
+for nametype in (:StateName, :OpName)
+  kronned = :($(nametype){:kronned})
+  @eval begin
+    nsites(n::$(kronned)) = sum(nsites, n.args)
+    function (n::$(kronned))(domain...)
+      # TODO: Generalize beyond two arguments.
+      # Use `cumsum(nsites.(n.args))`.
+      stops = cumsum(nsites.(n.args))
+      starts = [1, stops[1:(end - 1)] .+ 1...]
+      domains = map((start, stop) -> domain[start:stop], starts, stops)
+      return kron(map((arg, domain) -> arg(domain...), n.args, domains)...)
+    end
+    Base.kron(n1::$(nametype), n2::$(nametype), n_rest::$(nametype)...) =
+      $(kronned)(; args=(n1, n2, n_rest...))
+    ⊗(n1::$(nametype), n2::$(nametype)) = kron(n1, n2)
+    ⊗(n1::$(kronned), n2::$(kronned)) = kron(n1.args..., n2.args...)
+    ⊗(n1::$(nametype), n2::$(kronned)) = kron(n1, n2.args...)
+    ⊗(n1::$(kronned), n2::$(nametype)) = kron(n1.args..., n2)
+  end
 end
 
-function Base.:*(c::Number, n::OpName"scaled")
-  return OpName"scaled"(; op=n.op, c=(c * n.c))
-end
-function Base.:*(n::OpName"scaled", c::Number)
-  return OpName"scaled"(; op=n.op, c=(n.c * c))
-end
-function Base.:/(n::OpName"scaled", c::Number)
-  return OpName"scaled"(; op=n.op, c=(n.c / c))
+for nametype in (:StateName, :OpName)
+  summed = :($(nametype){:summed})
+  @eval begin
+    function nsites(n::$(summed))
+      @assert allequal(nsites, n.args)
+      return nsites(first(n.args))
+    end
+    function (n::$(summed))(domain...)
+      return mapreduce(a -> a(domain...), +, n.args)
+    end
+    Base.:+(n1::$(nametype), n2::$(nametype), n_rest::$(nametype)...) =
+      $(summed)(; args=(n1, n2, n_rest...))
+    Base.:+(n1::$(summed), n2::$(summed)) = +(n1.args..., n2.args...)
+    Base.:+(n1::$(summed), n2::$(nametype)) = +(n1.args..., n2)
+    Base.:+(n1::$(nametype), n2::$(summed)) = +(n1, n2.args...)
+    Base.:-(n1::$(nametype), n2::$(nametype)) = n1 + (-n2)
+  end
 end
 
-controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, op=n)
+for nametype in (:StateName, :OpName)
+  scaled = :($(nametype){:scaled})
+  @eval begin
+    nsites(n::$(scaled)) = nsites(n.arg)
+    function (n::$(scaled))(domain...)
+      return n.arg(domain...) * n.c
+    end
+    function Base.:*(c::Number, n::$(nametype))
+      return $(scaled)(; arg=n, c)
+    end
+    function Base.:*(n::$(nametype), c::Number)
+      return $(scaled)(; arg=n, c)
+    end
+    function Base.:/(n::$(nametype), c::Number)
+      return $(scaled)(; arg=n, c=inv(c))
+    end
+
+    function Base.:*(c::Number, n::$(scaled))
+      return $(scaled)(; arg=n.arg, c=(c * n.c))
+    end
+    function Base.:*(n::$(scaled), c::Number)
+      return $(scaled)(; arg=n.arg, c=(n.c * c))
+    end
+    function Base.:/(n::$(scaled), c::Number)
+      return $(scaled)(; arg=n.arg, c=(n.c / c))
+    end
+  end
+end
+
+# Unary operations unique to operators.
+for f in (:(Base.sqrt), :(Base.exp), :(Base.cis), :(Base.cos), :(Base.sin), :(Base.adjoint))
+  @eval begin
+    $f(n::OpName) = OpName"applied"(; f=$f, arg=n)
+  end
+end
+
+nsites(n::OpName"exponentiated") = nsites(n.arg)
+function (n::OpName"exponentiated")(domain...)
+  return n.arg(domain...)^n.exponent
+end
+Base.:^(n::OpName, exponent) = OpName"exponentiated"(; arg=n, exponent)
+
+function nsites(n::OpName"producted")
+  @assert allequal(nsites, n.args)
+  return nsites(first(n.args))
+end
+function (n::OpName"producted")(domain...)
+  return mapreduce(a -> a(domain...), *, n.args)
+end
+function Base.:*(n1::OpName, n2::OpName, n_rest::OpName...)
+  return OpName"producted"(; args=(n1, n2, n_rest...))
+end
+Base.:*(n1::StateName"producted", n2::StateName"producted") = *(n1.args..., n2.args...)
+Base.:*(n1::StateName, n2::StateName"producted") = *(n1, n2.args...)
+Base.:*(n1::StateName"producted", n2::StateName) = *(n1.args..., n2)
+
+controlled(n::OpName; ncontrol=1) = OpName"Controlled"(; ncontrol, arg=n)
 
 using LinearAlgebra: Diagonal
 function (::OpName"Id")(domain)
@@ -358,11 +344,11 @@ alias(::OpName"Sx2") = OpName"Sx"()^2
 
 # Generic rotation.
 # exp(-im * θ / 2 * O)
-alias(n::OpName"R") = cis(-(n.θ / 2) * n.op)
+alias(n::OpName"R") = cis(-(n.θ / 2) * n.arg)
 
 # Rotation around X-axis
 # exp(-im * θ / 2 * X)
-alias(n::OpName"Rx") = OpName"R"(; params(n)..., op=OpName"X"())
+alias(n::OpName"Rx") = OpName"R"(; params(n)..., arg=OpName"X"())
 
 alias(::OpName"Y") = -im * (OpName"σ⁺"() - OpName"σ⁻"()) / 2
 # TODO: No subsript `\_y` available
@@ -387,21 +373,21 @@ alias(::OpName"Sy2") = -OpName"iSy"()^2
 
 # Rotation around Y-axis
 # exp(-im * θ / 2 * Y) = exp(-θ / 2 * iY)
-alias(n::OpName"Ry") = OpName"R"(; params(n)..., op=OpName"Y"())
+alias(n::OpName"Ry") = OpName"R"(; params(n)..., arg=OpName"Y"())
 
 # Ising (XX) coupling gate
 # exp(-im * θ/2 * X ⊗ X)
-alias(n::OpName"Rxx") = OpName"R"(; params(n)..., op=OpName"X"() ⊗ OpName"X"())
+alias(n::OpName"Rxx") = OpName"R"(; params(n)..., arg=OpName"X"() ⊗ OpName"X"())
 @op_alias "RXX" "Rxx"
 
 # Ising (YY) coupling gate
 # exp(-im * θ/2 * Y ⊗ Y)
-alias(n::OpName"Ryy") = OpName"R"(; params(n)..., op=OpName"Y"() ⊗ OpName"Y"())
+alias(n::OpName"Ryy") = OpName"R"(; params(n)..., arg=OpName"Y"() ⊗ OpName"Y"())
 @op_alias "RYY" "Ryy"
 
 # Ising (ZZ) coupling gate
 # exp(-im * θ/2 * Z ⊗ Z)
-alias(n::OpName"Rzz") = OpName"R"(; params(n)..., op=OpName"Z"() ⊗ OpName"Z"())
+alias(n::OpName"Rzz") = OpName"R"(; params(n)..., arg=OpName"Z"() ⊗ OpName"Z"())
 @op_alias "RZZ" "Rzz"
 
 ## TODO: Check this definition and see if it is worth defining this.
@@ -439,7 +425,7 @@ alias(::OpName"Sz2") = OpName"Sz"()^2
 
 # Rotation around Z-axis
 # exp(-im * θ / 2 * Z)
-alias(n::OpName"Rz") = OpName"R"(; params(n)..., op=OpName"Z"())
+alias(n::OpName"Rz") = OpName"R"(; params(n)..., arg=OpName"Z"())
 
 using LinearAlgebra: eigen
 function (n::OpName"H")(domain)
