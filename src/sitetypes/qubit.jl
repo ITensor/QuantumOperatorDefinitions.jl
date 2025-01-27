@@ -6,15 +6,10 @@ alias(::SiteType"SpinHalf=1/2") = SiteType"Qubit"()
 
 Base.length(::SiteType"Qubit") = 2
 
-# `eigvecs(Z)`
-# (::StateName"0", ::Tuple{SiteType"Qubit"}) = [1, 0]
-
 @state_alias "Up" "0"
 @state_alias "↑" "0"
 @state_alias "Z+" "0"
 @state_alias "Zp" "0"
-
-# (::StateName"1", ::Tuple{SiteType"Qubit"}) = [0, 1]
 
 @state_alias "↓" "1"
 @state_alias "Dn" "1"

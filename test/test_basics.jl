@@ -142,12 +142,6 @@ const elts = (real_elts..., complex_elts...)
       end
     end
   end
-  @testset "state" begin
-    @test state(1) == [1, 0]
-    @test state(2) == [0, 1]
-    @test state(1, 3) == [1, 0, 0]
-    @test state(2, 3) == [0, 1, 0]
-  end
   @testset "op parsing" begin
     @test Matrix(opexpr("X * Y")) == op("X") * op("Y")
     @test op("X * Y") == op("X") * op("Y")
@@ -166,5 +160,20 @@ const elts = (real_elts..., complex_elts...)
     for name in ("c↑", "c†↑", "c↓", "c†↓")
       @test op(name, SiteType("Electron")) == Matrix(OpName(name), SiteType("Electron"))
     end
+  end
+  @testset "state" begin
+    @test state(1) == [1, 0]
+    @test state("0") == [1, 0]
+    @test state(2) == [0, 1]
+    @test state("1") == [0, 1]
+    @test state(1, 3) == [1, 0, 0]
+    @test state("0", 3) == [1, 0, 0]
+    @test state(2, 3) == [0, 1, 0]
+    @test state("1", 3) == [0, 1, 0]
+    @test state(3, 3) == [0, 0, 1]
+    @test state("2", 3) == [0, 0, 1]
+
+    @test state("|0⟩ + 2|+⟩") == state("0") + 2 * state("+")
+    @test state("|0⟩ ⊗ |+⟩") == kron(state("0"), state("+"))
   end
 end

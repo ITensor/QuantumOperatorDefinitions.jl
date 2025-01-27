@@ -53,12 +53,15 @@ end
 # one-based indexing, as opposed to `state("0") == [1, 0]`.
 stateexpr(n::Integer; kwargs...) = StateName(n; kwargs...)
 
-const DAGGER_STRING = randstring()
-const UPARROW_STRING = randstring()
-const DOWNARROW_STRING = randstring()
-const PLUS_STRING = randstring()
-const MINUS_STRING = randstring()
-const EXPR_REPLACEMENTS = (
+randcharstring() = randstring(['A':'Z'; 'a':'z'], 12)
+const DAGGER_STRING = randcharstring()
+const UPARROW_STRING = randcharstring()
+const DOWNARROW_STRING = randcharstring()
+const PLUS_STRING = randcharstring()
+const MINUS_STRING = randcharstring()
+const VERTICALBAR_STRING = randcharstring()
+const RANGLE_STRING = randcharstring()
+const EXPR_REPLACEMENTS_1 = (
   "†" => DAGGER_STRING,
   "↑" => UPARROW_STRING,
   "↓" => DOWNARROW_STRING,
@@ -67,16 +70,27 @@ const EXPR_REPLACEMENTS = (
   r"(\S)\+" => SubstitutionString("\\1$(PLUS_STRING)"),
   r"(\S)\-" => SubstitutionString("\\1$(MINUS_STRING)"),
 )
+const EXPR_REPLACEMENTS_2 = (
+  r"\|(\S*)⟩" => SubstitutionString("$(VERTICALBAR_STRING)\\1$(RANGLE_STRING)"),
+)
 const INVERSE_EXPR_REPLACEMENTS = (
   DAGGER_STRING => "†",
   UPARROW_STRING => "↑",
   DOWNARROW_STRING => "↓",
   PLUS_STRING => "+",
   MINUS_STRING => "-",
+  # We remove the bra-ket notation and search for states
+  # with names stored inside.
+  VERTICALBAR_STRING => "",
+  RANGLE_STRING => "",
 )
 
 function state_or_op_expr(ntype::Type, n::String; kwargs...)
-  n = replace(n, EXPR_REPLACEMENTS...)
+  # Do this in two rounds since for some reason
+  # one round doesn't work for expressions
+  # like `"|+⟩"`.
+  n = replace(n, EXPR_REPLACEMENTS_1...)
+  n = replace(n, EXPR_REPLACEMENTS_2...)
   depth = 1
   return state_or_op_expr(ntype, Meta.parse(n), depth; kwargs...)
 end
