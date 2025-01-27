@@ -1,5 +1,5 @@
 using QuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, op, opexpr, state, nsites
-using LinearAlgebra: Diagonal
+using LinearAlgebra: Diagonal, I
 using Test: @test, @testset
 
 const real_elts = (Float32, Float64)
@@ -54,7 +54,7 @@ const elts = (real_elts..., complex_elts...)
         [0 1; 0 0],
       ),
       (
-        SiteType("Qudit"; length=3),
+        SiteType("Qudit"; dim=3),
         3,
         √2 * [0 1 0; 1 0 1; 0 1 0],
         √2 * [0 -im 0; im 0 -im; 0 im 0],
@@ -161,6 +161,19 @@ const elts = (real_elts..., complex_elts...)
       @test op(name, SiteType("Electron")) == Matrix(OpName(name), SiteType("Electron"))
     end
   end
+  @testset "Random unitary" begin
+    U = op("RandomUnitary")
+    @test eltype(U) === Complex{Float64}
+    @test U * U' ≈ I(2)
+
+    U = op("RandomUnitary"; eltype=Float32)
+    @test eltype(U) === Float32
+    @test U * U' ≈ I(2)
+
+    U = op("RandomUnitary", 3)
+    @test eltype(U) === Complex{Float64}
+    @test U * U' ≈ I(3)
+  end
   @testset "state" begin
     @test state(1) == [1, 0]
     @test state("0") == [1, 0]
@@ -175,5 +188,11 @@ const elts = (real_elts..., complex_elts...)
 
     @test state("|0⟩ + 2|+⟩") == state("0") + 2 * state("+")
     @test state("|0⟩ ⊗ |+⟩") == kron(state("0"), state("+"))
+  end
+  @testset "Boson and spin" begin
+    for t in (SiteType("Qudit"; dim=3), SiteType("Boson"; dim=3), SiteType("S"; spin=1))
+      @test length(t) == 3
+      @test op("X", t) == op("X", 3)
+    end
   end
 end

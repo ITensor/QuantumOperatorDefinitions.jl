@@ -5,7 +5,7 @@ using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions, OpName, SiteType, StateName, has_fermion_string
 
 function QuantumOperatorDefinitions.SiteType(r::Index)
-  return SiteType(gettag(r, "sitetype", "Qudit"); length=Int(length(r)))
+  return SiteType(gettag(r, "sitetype", "Qudit"); dim=Int(length(r)))
 end
 
 function QuantumOperatorDefinitions.has_fermion_string(n::String, r::Index)

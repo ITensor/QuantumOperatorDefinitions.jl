@@ -1,11 +1,12 @@
 struct SiteType{T,Params}
   params::Params
+  function SiteType{N}(params::NamedTuple) where {N}
+    return new{N,typeof(params)}(params)
+  end
 end
 params(t::SiteType) = getfield(t, :params)
-
 Base.getproperty(t::SiteType, name::Symbol) = getfield(params(t), name)
 
-SiteType{N}(params) where {N} = SiteType{N,typeof(params)}(params)
 SiteType{N}(; kwargs...) where {N} = SiteType{N}((; kwargs...))
 
 SiteType(s::AbstractString; kwargs...) = SiteType{Symbol(s)}(; kwargs...)

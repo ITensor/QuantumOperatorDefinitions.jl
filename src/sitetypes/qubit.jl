@@ -86,62 +86,15 @@ or:
 alias(n::OpName"R") = OpName"Rn"(; θ=n.θ, ϕ=n.ϕ, λ=-n.ϕ)
 =#
 # https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.UGate
-function Base.AbstractArray(n::OpName"Rn", ::Tuple{SiteType"Qubit"})
+# TODO: Generalize to `"Qudit"`, see:
+# https://quantumcomputing.stackexchange.com/questions/16251/how-does-a-general-rotation-r-hatn-theta-related-to-u-3-gate
+# https://quantumcomputing.stackexchange.com/questions/4249/decomposition-of-an-arbitrary-1-qubit-gate-into-a-specific-gateset
+# https://en.wikipedia.org/wiki/List_of_quantum_logic_gates#Other_named_gates
+# https://en.wikipedia.org/wiki/Spin_(physics)#Higher_spins
+function (n::OpName"Rn")(::SiteType"Qubit")
   return [
     cos(n.θ / 2) -exp(im * n.λ)*sin(n.θ / 2)
     exp(im * n.ϕ)*sin(n.θ / 2) exp(im * (n.ϕ + n.λ))*cos(n.θ / 2)
   ]
 end
 @op_alias "Rn̂" "Rn"
-
-# TODO: Generalize to `"Qudit"` and other SiteTypes.
-# https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.UCGate
-nsites(n::OpName"Controlled") = get(params(n), :ncontrol, 1) + nsites(n.arg)
-function Base.AbstractArray(n::OpName"Controlled", ts::Tuple{Vararg{SiteType"Qubit"}})
-  # Number of target qubits.
-  nt = nsites(n.arg)
-  # Number of control qubits.
-  nc = get(params(n), :ncontrol, length(ts) - nt)
-  @assert length(ts) == nc + nt
-  return [
-    I(2^nc) falses(2^nc, 2^nt)
-    falses(2^nt, 2^nc) AbstractArray(n.arg, ts[(nc + 1):end])
-  ]
-end
-@op_alias "CNOT" "Controlled" op = OpName"X"()
-@op_alias "CX" "Controlled" op = OpName"X"()
-@op_alias "CY" "Controlled" op = OpName"Y"()
-@op_alias "CZ" "Controlled" op = OpName"Z"()
-function alias(n::OpName"CPhase")
-  return controlled(OpName"Phase"(; params(n)...))
-end
-@op_alias "CPHASE" "CPhase"
-@op_alias "Cphase" "CPhase"
-function alias(n::OpName"CRx")
-  return controlled(OpName"Rx"(; params(n)...))
-end
-@op_alias "CRX" "CRx"
-function alias(::OpName"CRy")
-  return controlled(OpName"Ry"(; params(n)...))
-end
-@op_alias "CRY" "CRy"
-function alias(::OpName"CRz")
-  return controlled(OpName"Rz"(; params(n)...))
-end
-@op_alias "CRZ" "CRz"
-function alias(::OpName"CRn")
-  return controlled(; arg=OpName"Rn"(; params(n)...))
-end
-@op_alias "CRn̂" "CRn"
-
-@op_alias "CCNOT" "Controlled" ncontrol = 2 op = OpName"X"()
-@op_alias "Toffoli" "CCNOT"
-@op_alias "CCX" "CCNOT"
-@op_alias "TOFF" "CCNOT"
-
-@op_alias "CSWAP" "Controlled" ncontrol = 2 op = OpName"SWAP"()
-@op_alias "Fredkin" "CSWAP"
-@op_alias "CSwap" "CSWAP"
-@op_alias "CS" "CSWAP"
-
-@op_alias "CCCNOT" "Controlled" ncontrol = 3 op = OpName"X"()

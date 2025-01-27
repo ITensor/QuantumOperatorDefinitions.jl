@@ -1,16 +1,16 @@
+using LinearAlgebra: diag, qr
+
 struct OpName{Name,Params}
-  function OpName{Name,Params}(params::NamedTuple) where {Name,Params}
-    return new{Name,(; Params..., params...)}()
+  params::Params
+  function OpName{N}(params::NamedTuple) where {N}
+    return new{N,typeof(params)}(params)
   end
 end
 name(::OpName{Name}) where {Name} = Name
-params(::OpName{<:Any,Params}) where {Params} = Params
+params(n::OpName) = getfield(n, :params)
 
 Base.getproperty(n::OpName, name::Symbol) = getfield(params(n), name)
 
-OpName{Name,Params}(; kwargs...) where {Name,Params} = OpName{Name,Params}((; kwargs...))
-
-OpName{N}(params::NamedTuple) where {N} = OpName{N,params}()
 OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
 
 # This compiles operator expressions, such as:
@@ -461,35 +461,84 @@ end
 alias(::OpName"√iSWAP") = √(OpName"iSWAP"())
 @op_alias "√iSwap" "√iSWAP"
 
-## TODO: Bring back these definitions.
-## function default_random_matrix(eltype::Type, s::Index...)
-##   n = prod(dim.(s))
-##   return randn(eltype, n, n)
-## end
-##
-## # Haar-random unitary
-## #
-## # Reference:
-## # Section 4.6
-## # http://math.mit.edu/~edelman/publications/random_matrix_theory.pdf
-## function op!(
-##   o::ITensor,
-##   ::OpName"RandomUnitary",
-##   ::SiteType"Generic",
-##   s1::Index,
-##   sn::Index...;
-##   eltype=ComplexF64,
-##   random_matrix=default_random_matrix(eltype, s1, sn...),
-## )
-##   s = (s1, sn...)
-##   Q, _ = NDTensors.qr_positive(random_matrix)
-##   t = itensor(Q, prime.(s)..., dag.(s)...)
-##   return settensor!(o, tensor(t))
-## end
-##
-## function op!(o::ITensor, ::OpName"randU", st::SiteType"Generic", s::Index...; kwargs...)
-##   return op!(o, OpName("RandomUnitary"), st, s...; kwargs...)
-## end
+# TODO: Generalize to more controlled operators, right now
+# there is only one controlled operator that is enabled when
+# all of the last values of each sites/Qudit is set. See:
+# https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.library.UCGate
+# https://arxiv.org/abs/2410.05122
+nsites(n::OpName"Controlled") = get(params(n), :ncontrol, 1) + nsites(n.arg)
+function (n::OpName"Controlled")(domain...)
+  # Number of target sites.
+  nt = nsites(n.arg)
+  # Number of control sites.
+  nc = get(params(n), :ncontrol, length(domain) - nt)
+  @assert length(domain) == nc + nt
+  d_control = prod(to_dim.(domain[1:nc]))
+  return cat(I(d_control), n.arg(domain[(nc + 1):end]...); dims=(1, 2))
+end
+@op_alias "CNOT" "Controlled" op = OpName"X"()
+@op_alias "CX" "Controlled" op = OpName"X"()
+@op_alias "CY" "Controlled" op = OpName"Y"()
+@op_alias "CZ" "Controlled" op = OpName"Z"()
+function alias(n::OpName"CPhase")
+  return controlled(OpName"Phase"(; params(n)...))
+end
+@op_alias "CPHASE" "CPhase"
+@op_alias "Cphase" "CPhase"
+function alias(n::OpName"CRx")
+  return controlled(OpName"Rx"(; params(n)...))
+end
+@op_alias "CRX" "CRx"
+function alias(::OpName"CRy")
+  return controlled(OpName"Ry"(; params(n)...))
+end
+@op_alias "CRY" "CRy"
+function alias(::OpName"CRz")
+  return controlled(OpName"Rz"(; params(n)...))
+end
+@op_alias "CRZ" "CRz"
+function alias(::OpName"CRn")
+  return controlled(; arg=OpName"Rn"(; params(n)...))
+end
+@op_alias "CRn̂" "CRn"
+
+@op_alias "CCNOT" "Controlled" ncontrol = 2 op = OpName"X"()
+@op_alias "Toffoli" "CCNOT"
+@op_alias "CCX" "CCNOT"
+@op_alias "TOFF" "CCNOT"
+
+@op_alias "CSWAP" "Controlled" ncontrol = 2 op = OpName"SWAP"()
+@op_alias "Fredkin" "CSWAP"
+@op_alias "CSwap" "CSWAP"
+@op_alias "CS" "CSWAP"
+
+@op_alias "CCCNOT" "Controlled" ncontrol = 3 op = OpName"X"()
+
+# Version of `sign` that returns one
+# if `x == 0`.
+function nonzero_sign(x)
+  iszero(x) && return one(x)
+  return sign(x)
+end
+
+function qr_positive(M::AbstractMatrix)
+  Q, R = qr(M)
+  Q′ = typeof(R)(Q)
+  signs = nonzero_sign.(diag(R))
+  Q′ = Q′ * Diagonal(signs)
+  R = Diagonal(conj.(signs)) * R
+  return Q′, R
+end
+
+# TODO: Store a random matrix or seed as a parameter
+# of the `OpName`?
+function (n::OpName"RandomUnitary")(domain...)
+  d = prod(to_dim.(domain))
+  elt = get(params(n), :eltype, Complex{Float64})
+  Q, _ = qr_positive(randn(elt, (d, d)))
+  return Q
+end
+@op_alias "randU" "RandomUnitary"
 
 # Expand the operator in a new basis.
 using LinearAlgebra: ⋅

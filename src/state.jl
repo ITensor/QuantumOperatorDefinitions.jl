@@ -2,12 +2,13 @@ using Random: randstring
 
 struct StateName{Name,Params}
   params::Params
+  function StateName{N}(params::NamedTuple) where {N}
+    return new{N,typeof(params)}(params)
+  end
 end
 params(n::StateName) = getfield(n, :params)
-
 Base.getproperty(n::StateName, name::Symbol) = getfield(params(n), name)
 
-StateName{N}(params) where {N} = StateName{N,typeof(params)}(params)
 StateName{N}(; kwargs...) where {N} = StateName{N}((; kwargs...))
 
 StateName(s::AbstractString; kwargs...) = StateName{Symbol(s)}(; kwargs...)
