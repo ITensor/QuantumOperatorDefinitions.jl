@@ -223,9 +223,31 @@ const elts = (real_elts..., complex_elts...)
     end
 
     for t in (SiteType("S=1"), SiteType("SpinOne"))
-      @test state("Z+", SiteType("S=1")) == [1, 0, 0]
-      @test state("Z0", SiteType("S=1")) == [0, 1, 0]
-      @test state("Z-", SiteType("S=1")) == [0, 0, 1]
+      for (ns, x) in (
+        (("Z+", "↑", "Up"), [1, 0, 0]),
+        (("Z0", "0"), [0, 1, 0]),
+        (("Z-", "↓", "Dn"), [0, 0, 1]),
+        (("X+",), [1 / 2, 1 / sqrt(2), 1 / 2]),
+        (("X0",), [-1 / sqrt(2), 0, 1 / sqrt(2)]),
+        (("X-",), [1 / 2, -1 / sqrt(2), 1 / 2]),
+        (("Y+",), [-1 / 2, -im / sqrt(2), 1 / 2]),
+        (("Y0",), [1 / sqrt(2), 0, 1 / sqrt(2)]),
+        (("Y-",), [-1 / 2, im / sqrt(2), 1 / 2]),
+      )
+        for n in ns
+          @test state(n, t) ≈ x
+        end
+      end
+    end
+
+    # Check they are eigenvalues
+    (λ⁺, λ⁰, λ⁻) = (2, 0, -2)
+    for t in (SiteType("S=1"), SiteType("SpinOne"))
+      for n in ("X", "Y", "Z")
+        @test op(n, t) * state("$(n)+", t) ≈ λ⁺ * state("$(n)+", t) atol = eps()
+        @test op(n, t) * state("$(n)0", t) ≈ λ⁰ * state("$(n)0", t) atol = eps()
+        @test op(n, t) * state("$(n)-", t) ≈ λ⁻ * state("$(n)-", t) atol = eps()
+      end
     end
   end
 end

@@ -516,6 +516,17 @@ end
 
 @op_alias "CCCNOT" "Controlled" ncontrol = 3 op = OpName"X"()
 
+## # 1-qudit rotation around generic axis n̂.
+## # exp(-im * α / 2 * n̂ ⋅ σ⃗)
+## function (n::OpName"Rn")(domain)
+##   # TODO: Is this a good parametrization?
+##   n̂ = (sin(n.θ/2) * cos(n.ϕ), sin(n.θ/2) * sin(n.ϕ/2), cos(n.θ/2))
+##   σ⃗ = (OpName"X"(domain), OpName"Y"(domain), OpName"Z"(domain))
+##   n̂σ⃗ = mapreduce(*, +, n̂, σ⃗)
+##   return cis(-(n.λ/2) * n̂σ⃗)
+## end
+## @op_alias "Rn̂" "Rn"
+
 # Version of `sign` that returns one
 # if `x == 0`.
 function nonzero_sign(x)

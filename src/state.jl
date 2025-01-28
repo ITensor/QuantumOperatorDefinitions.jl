@@ -141,11 +141,16 @@ function (n::StateName"StandardBasis")(domain)
   a[n.index] = one(Bool)
   return a
 end
-function (n::StateName{N})(domain) where {N}
+function (n::StateName{N})(domain...) where {N}
+  # TODO: Try one alias at a time?
+  # TODO: First call `alias(n, domain...)`
+  # to allow for aliases specific to certain
+  # SiteTypes?
   n′ = alias(n)
-  if n == n′
+  domain′ = alias.(domain)
+  if n == n′ && domain′ == domain
     index = parse(Int, String(N)) + 1
-    return StateName"StandardBasis"(; index)(domain)
+    return StateName"StandardBasis"(; index)(domain...)
   end
-  return n′(domain)
+  return n′(domain′...)
 end
