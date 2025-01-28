@@ -173,7 +173,8 @@ for nametype in (:StateName, :OpName)
   summed = :($(nametype){:summed})
   @eval begin
     function nsites(n::$(summed))
-      @assert allequal(nsites, n.args)
+      # TODO: Use `allequal(nsites, n.args)` once we drop Julia 1.10 support.
+      @assert allequal(nsites.(n.args))
       return nsites(first(n.args))
     end
     function (n::$(summed))(domain...)
@@ -231,7 +232,8 @@ end
 Base.:^(n::OpName, exponent) = OpName"exponentiated"(; arg=n, exponent)
 
 function nsites(n::OpName"producted")
-  @assert allequal(nsites, n.args)
+  # TODO: Use `allequal(nsites, n.args)` once we drop Julia 1.10 support.
+  @assert allequal(nsites.(n.args))
   return nsites(first(n.args))
 end
 function (n::OpName"producted")(domain...)

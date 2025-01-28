@@ -1,14 +1,7 @@
-Base.length(::SiteType"Fermion") = 2
+# TODO: Make an alias of `"Qubit"` to inherit
+# more operator and state definitions?
 
-# TODO: Update these, using aliasing to minimize definitions.
-Base.AbstractArray(::StateName"Emp", ::SiteType"Fermion") = [1.0 0.0]
-Base.AbstractArray(::StateName"Occ", ::SiteType"Fermion") = [0.0 1.0]
-function Base.AbstractArray(::StateName"0", st::SiteType"Fermion")
-  return AbstractArray(StateName("Emp"), st)
-end
-function Base.AbstractArray(::StateName"1", st::SiteType"Fermion")
-  return AbstractArray(StateName("Occ"), st)
-end
+Base.length(::SiteType"Fermion") = 2
 
 (::OpName"F")(::SiteType"Fermion") = Diagonal([1, -1])
 

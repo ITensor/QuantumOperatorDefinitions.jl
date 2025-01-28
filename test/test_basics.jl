@@ -189,10 +189,43 @@ const elts = (real_elts..., complex_elts...)
     @test state("|0⟩ + 2|+⟩") == state("0") + 2 * state("+")
     @test state("|0⟩ ⊗ |+⟩") == kron(state("0"), state("+"))
   end
+  @testset "Electron/tJ" begin
+    for (ns, x) in (
+      (("0", "Emp"), [1, 0, 0, 0]),
+      (("↑", "Up"), [0, 1, 0, 0]),
+      (("↓", "Dn"), [0, 0, 1, 0]),
+      (("↑↓", "UpDn"), [0, 0, 0, 1]),
+    )
+      for n in ns
+        @test state(n, SiteType("Electron")) == x
+        @test state(n, SiteType("tJ")) == x[1:3]
+      end
+    end
+    for (ns, x) in (
+      (("n↑", "Nup"), [0 0 0 0; 0 1 0 0; 0 0 0 0; 0 0 0 1]),
+      (("n↓", "Ndn"), [0 0 0 0; 0 0 0 0; 0 0 1 0; 0 0 0 1]),
+      (("n↑↓", "Nupdn"), [0 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 1]),
+      (("ntot", "Ntot"), [0 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 2]),
+      (("c↑", "Cup"), [0 1 0 0; 0 0 0 0; 0 0 0 1; 0 0 0 0]),
+      (("Sx",), [0 0 0 0; 0 0 1/2 0; 0 1/2 0 0; 0 0 0 0]),
+      # TODO: Add more tests.
+    )
+      for n in ns
+        @test op(n, SiteType("Electron")) == x
+        @test op(n, SiteType("tJ")) == x[1:3, 1:3]
+      end
+    end
+  end
   @testset "Boson and spin" begin
     for t in (SiteType("Qudit"; dim=3), SiteType("Boson"; dim=3), SiteType("S"; spin=1))
       @test length(t) == 3
       @test op("X", t) == op("X", 3)
+    end
+
+    for t in (SiteType("S=1"), SiteType("SpinOne"))
+      @test state("Z+", SiteType("S=1")) == [1, 0, 0]
+      @test state("Z0", SiteType("S=1")) == [0, 1, 0]
+      @test state("Z-", SiteType("S=1")) == [0, 0, 1]
     end
   end
 end

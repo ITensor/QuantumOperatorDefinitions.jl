@@ -6,15 +6,17 @@ alias(::SiteType"SpinHalf=1/2") = SiteType"Qubit"()
 
 Base.length(::SiteType"Qubit") = 2
 
-@state_alias "Up" "0"
-@state_alias "↑" "0"
-@state_alias "Z+" "0"
-@state_alias "Zp" "0"
+(::StateName"↑")(::SiteType"Qubit") = StateName"0"()(2)
+(::StateName"Up")(::SiteType"Qubit") = StateName"0"()(2)
+(::StateName"Z+")(::SiteType"Qubit") = StateName"0"()(2)
+(::StateName"Zp")(::SiteType"Qubit") = StateName"0"()(2)
+(::StateName"Emp")(::SiteType"Qubit") = StateName"0"()(2)
 
-@state_alias "↓" "1"
-@state_alias "Dn" "1"
-@state_alias "Z-" "1"
-@state_alias "Zm" "1"
+(::StateName"↓")(::SiteType"Qubit") = StateName"1"()(2)
+(::StateName"Dn")(::SiteType"Qubit") = StateName"1"()(2)
+(::StateName"Z-")(::SiteType"Qubit") = StateName"1"()(2)
+(::StateName"Zm")(::SiteType"Qubit") = StateName"1"()(2)
+(::StateName"Occ")(::SiteType"Qubit") = StateName"1"()(2)
 
 # `eigvecs(X)`
 alias(::StateName"+") = (StateName"0"() + StateName"1"()) / √2

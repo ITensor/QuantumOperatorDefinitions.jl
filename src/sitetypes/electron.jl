@@ -1,35 +1,27 @@
 Base.length(::SiteType"Electron") = 4
 
-# TODO: Write these in terms of Kronecker products of Qubit states.
-Base.AbstractArray(::StateName"Emp", ::Tuple{SiteType"Electron"}) = [1.0, 0, 0, 0]
-Base.AbstractArray(::StateName"Up", ::Tuple{SiteType"Electron"}) = [0.0, 1, 0, 0]
-Base.AbstractArray(::StateName"Dn", ::Tuple{SiteType"Electron"}) = [0.0, 0, 1, 0]
-Base.AbstractArray(::StateName"UpDn", ::Tuple{SiteType"Electron"}) = [0.0, 0, 0, 1]
-# TODO: Use aliasing.
-function Base.AbstractArray(::StateName"0", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("Emp"), st)
-end
-function Base.AbstractArray(::StateName"↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("Up"), st)
-end
-function Base.AbstractArray(::StateName"↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("Dn"), st)
-end
-function Base.AbstractArray(::StateName"↑↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("UpDn"), st)
-end
+(::StateName"Emp")(domain::SiteType"Electron") = StateName"0"()(domain)
+
+(::StateName"↑")(::SiteType"Electron") = (StateName"0"() ⊗ StateName"1"())(2, 2)
+(::StateName"Up")(domain::SiteType"Electron") = StateName"↑"()(domain)
+
+(::StateName"↓")(domain::SiteType"Electron") = (StateName"1"() ⊗ StateName"0"())(2, 2)
+(::StateName"Dn")(domain::SiteType"Electron") = StateName"↓"()(domain)
+
+(::StateName"↑↓")(domain::SiteType"Electron") = (StateName"1"() ⊗ StateName"1"())(2, 2)
+(::StateName"UpDn")(domain::SiteType"Electron") = StateName"↑↓"()(domain)
 
 # I ⊗ n
-(::OpName"Nup")(::SiteType"Electron") = (OpName"I"() ⊗ OpName"n"())(2, 2)
-@op_alias "n↑" "Nup"
+(::OpName"n↑")(::SiteType"Electron") = (OpName"I"() ⊗ OpName"n"())(2, 2)
+@op_alias "Nup" "n↑"
 
 # n ⊗ I
-(::OpName"Ndn")(::SiteType"Electron") = (OpName"n"() ⊗ OpName"I"())(2, 2)
-@op_alias "n↓" "Ndn"
+(::OpName"n↓")(::SiteType"Electron") = (OpName"n"() ⊗ OpName"I"())(2, 2)
+@op_alias "Ndn" "n↓"
 
 # n ⊗ n
-(::OpName"Nupdn")(::SiteType"Electron") = (OpName"n"() ⊗ OpName"n"())(2, 2)
-@op_alias "n↑↓" "Nupdn"
+(::OpName"n↑↓")(::SiteType"Electron") = (OpName"n"() ⊗ OpName"n"())(2, 2)
+@op_alias "Nupdn" "n↑↓"
 
 # I ⊗ n + n ⊗ I = n↑ + n↓
 alias(::OpName"ntot") = OpName"n↑"() + OpName"n↓"()
@@ -102,5 +94,5 @@ end
 
 has_fermion_string(::OpName"c↑", ::SiteType"Electron") = true
 has_fermion_string(::OpName"c†↑", ::SiteType"Electron") = true
-has_fermion_string(::OpName"c↓", ::Tuple{SiteType"Electron"}) = true
+has_fermion_string(::OpName"c↓", ::SiteType"Electron") = true
 has_fermion_string(::OpName"c†↓", ::SiteType"Electron") = true
