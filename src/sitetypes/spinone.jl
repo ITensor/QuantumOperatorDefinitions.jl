@@ -9,11 +9,11 @@ alias(::SiteType"SpinOne") = SiteType"S=1"()
 (::StateName"Z-")(::SiteType"S=1") = [0, 0, 1]
 
 ## TODO: Decide on these aliases.
-(::StateName"↑")(::SiteType"S=1") = StateName"Z+"()(domain)
-(::StateName"Up")(::SiteType"S=1") = StateName"Z+"()(domain)
-(::StateName"0")(::SiteType"S=1") = StateName"Z0"()(domain)
-(::StateName"↓")(::SiteType"S=1") = StateName"Z-"()(domain)
-(::StateName"Dn")(::SiteType"S=1") = StateName"Z-"()(domain)
+(::StateName"↑")(domain::SiteType"S=1") = StateName"Z+"()(domain)
+(::StateName"Up")(domain::SiteType"S=1") = StateName"Z+"()(domain)
+(::StateName"0")(domain::SiteType"S=1") = StateName"Z0"()(domain)
+(::StateName"↓")(domain::SiteType"S=1") = StateName"Z-"()(domain)
+(::StateName"Dn")(domain::SiteType"S=1") = StateName"Z-"()(domain)
 
 # TODO: Make these more general, define as something like:
 # `(n::StateName"X")(::SiteType"S=1") = eigvecs(OpName"X"())[n.eigval]`
