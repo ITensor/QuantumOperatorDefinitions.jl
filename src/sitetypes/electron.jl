@@ -1,303 +1,98 @@
 Base.length(::SiteType"Electron") = 4
 
-Base.AbstractArray(::StateName"Emp", ::Tuple{SiteType"Electron"}) = [1.0, 0, 0, 0]
-Base.AbstractArray(::StateName"Up", ::Tuple{SiteType"Electron"}) = [0.0, 1, 0, 0]
-Base.AbstractArray(::StateName"Dn", ::Tuple{SiteType"Electron"}) = [0.0, 0, 1, 0]
-Base.AbstractArray(::StateName"UpDn", ::Tuple{SiteType"Electron"}) = [0.0, 0, 0, 1]
-# TODO: Use aliasing.
-function Base.AbstractArray(::StateName"0", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("Emp"), st)
-end
-function Base.AbstractArray(::StateName"↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("Up"), st)
-end
-function Base.AbstractArray(::StateName"↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("Dn"), st)
-end
-function Base.AbstractArray(::StateName"↑↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(StateName("UpDn"), st)
-end
+(::StateName"Emp")(domain::SiteType"Electron") = StateName"0"()(domain)
+
+(::StateName"↑")(::SiteType"Electron") = (StateName"0"() ⊗ StateName"1"())(2, 2)
+(::StateName"Up")(domain::SiteType"Electron") = StateName"↑"()(domain)
+
+(::StateName"↓")(domain::SiteType"Electron") = (StateName"1"() ⊗ StateName"0"())(2, 2)
+(::StateName"Dn")(domain::SiteType"Electron") = StateName"↓"()(domain)
+
+(::StateName"↑↓")(domain::SiteType"Electron") = (StateName"1"() ⊗ StateName"1"())(2, 2)
+(::StateName"UpDn")(domain::SiteType"Electron") = StateName"↑↓"()(domain)
 
 # I ⊗ n
-# TODO: Define as `AbstractArray(OpName"I"() ⊗ OpName"n"(), (SiteType("Fermion"), SiteType("Fermion")))`?
-function Base.AbstractArray(::OpName"Nup", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 1.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 1.0
-  ]
-end
-function Base.AbstractArray(on::OpName"n↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
+(::OpName"n↑")(::SiteType"Electron") = (OpName"I"() ⊗ OpName"n"())(2, 2)
+@op_alias "Nup" "n↑"
 
 # n ⊗ I
-function Base.AbstractArray(::OpName"Ndn", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 1.0
-  ]
-end
-function Base.AbstractArray(on::OpName"n↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
+(::OpName"n↓")(::SiteType"Electron") = (OpName"n"() ⊗ OpName"I"())(2, 2)
+@op_alias "Ndn" "n↓"
 
 # n ⊗ n
-function Base.AbstractArray(::OpName"Nupdn", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 1.0
-  ]
-end
-function Base.AbstractArray(on::OpName"n↑↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
+(::OpName"n↑↓")(::SiteType"Electron") = (OpName"n"() ⊗ OpName"n"())(2, 2)
+@op_alias "Nupdn" "n↑↓"
 
-# I ⊗ n + n ⊗ I
-function Base.AbstractArray(::OpName"Ntot", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 1.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 2.0
-  ]
-end
-function Base.AbstractArray(on::OpName"ntot", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
-
-# I ⊗ c
-function Base.AbstractArray(::OpName"Cup", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 1.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 1.0
-    0.0 0.0 0.0 0.0
-  ]
-end
-function Base.AbstractArray(on::OpName"c↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
-
-# I ⊗ c†
-function Base.AbstractArray(::OpName"Cdagup", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    1.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-  ]
-end
-function Base.AbstractArray(on::OpName"c†↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
-
-# c ⊗ F
-function Base.AbstractArray(::OpName"Cdn", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 -1.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-  ]
-end
-function Base.AbstractArray(on::OpName"c↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(alias(on), st)
-end
-
-# c† ⊗ F
-function Base.AbstractArray(::OpName"Cdagdn", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    1.0 0.0 0.0 0.0
-    0.0 -1.0 0.0 0.0
-  ]
-end
-function Base.AbstractArray(::OpName"c†↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Cdagdn"), st)
-end
+# I ⊗ n + n ⊗ I = n↑ + n↓
+alias(::OpName"ntot") = OpName"n↑"() + OpName"n↓"()
+@op_alias "Ntot" "ntot"
 
 # I ⊗ a
-function Base.AbstractArray(::OpName"Aup", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 1.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 1.0
-    0.0 0.0 0.0 0.0
-  ]
-end
-function Base.AbstractArray(::OpName"a↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Aup"), st)
-end
+(::OpName"a↑")(::SiteType"Electron") = (OpName"I"() ⊗ OpName"a"())(2, 2)
+@op_alias "Aup" "a↑"
+# I ⊗ c
+@op_alias "c↑" "a↑"
+@op_alias "Cup" "c↑"
 
 # I ⊗ a†
-function Base.AbstractArray(::OpName"Adagup", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    1.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-  ]
-end
-function Base.AbstractArray(::OpName"a†↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Adagup"), st)
-end
+(::OpName"a†↑")(::SiteType"Electron") = (OpName"I"() ⊗ OpName"a†"())(2, 2)
+@op_alias "Adagup" "a†↑"
+# I ⊗ c†
+@op_alias "c†↑" "a†↑"
+@op_alias "Cdagup" "c†↑"
 
 # a ⊗ I
-function Base.AbstractArray(::OpName"Adn", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 1.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-  ]
+(::OpName"a↓")(::SiteType"Electron") = (OpName"a"() ⊗ OpName"I"())(2, 2)
+@op_alias "Adn" "a↓"
+# c ⊗ F
+function (::OpName"c↓")(::SiteType"Electron")
+  return (OpName"C"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
-function Base.AbstractArray(::OpName"a↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Adn"), st)
-end
+@op_alias "Cdn" "c↓"
 
 # a† ⊗ I
-function Base.AbstractArray(::OpName"Adagdn", ::Tuple{SiteType"Electron"})
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    1.0 0.0 0.0 0.0
-    0.0 1.0 0.0 0.0
-  ]
+(::OpName"a†↓")(::SiteType"Electron") = (OpName"a†"() ⊗ OpName"I"())(2, 2)
+@op_alias "Adagdn" "a†↓"
+# c† ⊗ F
+function (::OpName"c†↓")(::SiteType"Electron")
+  return (OpName"Cdag"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
-function Base.AbstractArray(::OpName"a†↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Adagdn"), st)
-end
+@op_alias "Cdagdn" "c†↓"
 
 # F ⊗ F
-function Base.AbstractArray(::OpName"F", ::Tuple{SiteType"Electron"})
-  return [
-    1.0 0.0 0.0 0.0
-    0.0 -1.0 0.0 0.0
-    0.0 0.0 -1.0 0.0
-    0.0 0.0 0.0 1.0
-  ]
+function (::OpName"F")(::SiteType"Electron")
+  return (OpName"F"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
 
 # I ⊗ F
-function Base.AbstractArray(::OpName"Fup", ::Tuple{SiteType"Electron"})
-  return [
-    1.0 0.0 0.0 0.0
-    0.0 -1.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 -1.0
-  ]
+function (::OpName"F↑")(::SiteType"Electron")
+  return (OpName"I"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
-function Base.AbstractArray(::OpName"F↑", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Fup"), st)
-end
+@op_alias "Fup" "F↑"
 
 # F ⊗ I
-function Base.AbstractArray(::OpName"Fdn", ::Tuple{SiteType"Electron"})
-  return [
-    1.0 0.0 0.0 0.0
-    0.0 1.0 0.0 0.0
-    0.0 0.0 -1.0 0.0
-    0.0 0.0 0.0 -1.0
-  ]
+function (::OpName"F↓")(::SiteType"Electron")
+  return (OpName"F"() ⊗ OpName"I"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
-function Base.AbstractArray(::OpName"F↓", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Fdn"), st)
+@op_alias "Fdn" "F↓"
+
+function (n::OpName"SpinOp")(::SiteType"Electron")
+  return cat(falses(1, 1), n.arg(2), falses(1, 1); dims=(1, 2))
 end
 
-function Base.AbstractArray(::OpName"Sz", ::Tuple{SiteType"Electron"})
-  # cat(falses(1, 1), Matrix(OpName("Sz")), falses(1, 1); dims=(1, 2))
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.5 0.0 0.0
-    0.0 0.0 -0.5 0.0
-    0.0 0.0 0.0 0.0
-  ]
+# These implicitly define other spin operators.
+# TODO: Maybe require calling it as `OpName("SpinOp"; arg=OpName("Sz"))`?
+function (n::OpName"σ⁺")(domain::SiteType"Electron")
+  return OpName"SpinOp"(; arg=n)(domain)
 end
-function Base.AbstractArray(::OpName"Sᶻ", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Sz"), st)
+function (n::OpName"σᶻ")(domain::SiteType"Electron")
+  return OpName"SpinOp"(; arg=n)(domain)
 end
-
-function Base.AbstractArray(::OpName"Sx", ::Tuple{SiteType"Electron"})
-  # cat(falses(1, 1), Matrix(OpName("Sx")), falses(1, 1); dims=(1, 2))
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.5 0.0
-    0.0 0.5 0.0 0.0
-    0.0 0.0 0.0 0.0
-  ]
+function (n::OpName"R")(domain::SiteType"Electron")
+  return OpName"SpinOp"(; arg=n)(domain)
 end
 
-function Base.AbstractArray(::OpName"Sˣ", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("Sx"), st)
-end
-
-function Base.AbstractArray(::OpName"S⁺", ::Tuple{SiteType"Electron"})
-  # cat(falses(1, 1), Matrix(OpName("S⁺")), falses(1, 1); dims=(1, 2))
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-  ]
-end
-function Base.AbstractArray(::OpName"Sp", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S⁺"), st)
-end
-function Base.AbstractArray(::OpName"Splus", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S⁺"), st)
-end
-
-function Base.AbstractArray(::OpName"S⁻", ::Tuple{SiteType"Electron"})
-  # cat(falses(1, 1), Matrix(OpName("S⁻")), falses(1, 1); dims=(1, 2))
-  return [
-    0.0 0.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-    0.0 1.0 0.0 0.0
-    0.0 0.0 0.0 0.0
-  ]
-end
-function Base.AbstractArray(::OpName"Sm", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S⁻"), st)
-end
-function Base.AbstractArray(::OpName"Sminus", st::Tuple{SiteType"Electron"})
-  return AbstractArray(OpName("S⁻"), st)
-end
-
-@op_alias "a↑" "Aup"
-@op_alias "a↓" "Adn"
-@op_alias "a†↓" "Adagdn"
-@op_alias "a†↑" "Adagup"
-@op_alias "c↑" "Cup"
-@op_alias "c↓" "Cdn"
-@op_alias "c†↑" "Cdagup"
-@op_alias "c†↓" "Cdagdn"
-@op_alias "n↑" "Nup"
-@op_alias "n↓" "Ndn"
-@op_alias "n↑↓" "Nupdn"
-@op_alias "ntot" "Ntot"
-@op_alias "F↑" "Fup"
-@op_alias "F↓" "Fdn"
-
-has_fermion_string(::OpName"Cup", ::Tuple{SiteType"Electron"}) = true
-function has_fermion_string(on::OpName"c↑", st::Tuple{SiteType"Electron"})
-  return has_fermion_string(alias(on), st)
-end
-has_fermion_string(::OpName"Cdagup", ::Tuple{SiteType"Electron"}) = true
-function has_fermion_string(on::OpName"c†↑", st::Tuple{SiteType"Electron"})
-  return has_fermion_string(alias(on), st)
-end
-has_fermion_string(::OpName"Cdn", ::Tuple{SiteType"Electron"}) = true
-function has_fermion_string(on::OpName"c↓", st::Tuple{SiteType"Electron"})
-  return has_fermion_string(alias(on), st)
-end
-has_fermion_string(::OpName"Cdagdn", ::Tuple{SiteType"Electron"}) = true
-function has_fermion_string(on::OpName"c†↓", st::Tuple{SiteType"Electron"})
-  return has_fermion_string(alias(on), st)
-end
+has_fermion_string(::OpName"c↑", ::SiteType"Electron") = true
+has_fermion_string(::OpName"c†↑", ::SiteType"Electron") = true
+has_fermion_string(::OpName"c↓", ::SiteType"Electron") = true
+has_fermion_string(::OpName"c†↓", ::SiteType"Electron") = true
