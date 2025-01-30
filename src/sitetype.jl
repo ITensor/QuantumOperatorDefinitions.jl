@@ -4,14 +4,15 @@ struct SiteType{T,Params}
     return new{N,typeof(params)}(params)
   end
 end
+value(::SiteType{T}) where {T} = T
 params(t::SiteType) = getfield(t, :params)
 Base.getproperty(t::SiteType, name::Symbol) = getfield(params(t), name)
+Base.get(t::SiteType, name::Symbol, default) = get(params(t), name, default)
 
 SiteType{N}(; kwargs...) where {N} = SiteType{N}((; kwargs...))
 
 SiteType(s::AbstractString; kwargs...) = SiteType{Symbol(s)}(; kwargs...)
 SiteType(i::Integer; kwargs...) = SiteType{Symbol(i)}(; kwargs...)
-value(::SiteType{T}) where {T} = T
 macro SiteType_str(s)
   return SiteType{Symbol(s)}
 end
@@ -26,7 +27,11 @@ function Base.length(t::SiteType)
   end
   return length(t′)
 end
-Base.AbstractUnitRange(t::SiteType) = Base.OneTo(length(t))
+function Base.AbstractUnitRange(t::SiteType)
+  # This logic allows specifying a range with extra properties,
+  # like ones with symmetry sectors.
+  return get(t, :range, Base.OneTo(length(t)))
+end
 Base.size(t::SiteType) = (length(t),)
 Base.size(t::SiteType, dim::Integer) = size(t)[dim]
 Base.axes(t::SiteType) = (AbstractUnitRange(t),)

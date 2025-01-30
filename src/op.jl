@@ -8,8 +8,8 @@ struct OpName{Name,Params}
 end
 name(::OpName{Name}) where {Name} = Name
 params(n::OpName) = getfield(n, :params)
-
 Base.getproperty(n::OpName, name::Symbol) = getfield(params(n), name)
+Base.get(t::OpName, name::Symbol, default) = get(params(t), name, default)
 
 OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
 
@@ -54,7 +54,9 @@ end
 # Generic to `StateName` or `OpName`.
 const StateOrOpName = Union{StateName,OpName}
 alias(n::StateOrOpName) = n
-function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Integer...)
+function (arrtype::Type{<:AbstractArray})(
+  n::StateOrOpName, domain::Union{Integer,AbstractUnitRange}...
+)
   return arrtype(n, domain)
 end
 (arrtype::Type{<:AbstractArray})(n::StateOrOpName, ts::SiteType...) = arrtype(n, ts)
@@ -87,32 +89,50 @@ function nsites(n::StateOrOpName)
   return nsites(n′)
 end
 
+function array(a::AbstractArray, ax::Tuple{Vararg{AbstractUnitRange}})
+  return a[ax...]
+end
+
 function op_convert(
   arrtype::Type{<:AbstractArray{<:Any,N}},
-  domain::Tuple{Vararg{Integer}},
+  domain::Tuple{Vararg{AbstractUnitRange}},
   a::AbstractArray{<:Any,N},
 ) where {N}
-  # TODO: Check the dimensions.
-  return convert(arrtype, a)
+  ax = (domain..., domain...)
+  a′ = array(a, ax)
+  return convert(arrtype, a′)
 end
 function op_convert(
-  arrtype::Type{<:AbstractArray}, domain::Tuple{Vararg{Integer}}, a::AbstractArray
+  arrtype::Type{<:AbstractArray}, domain::Tuple{Vararg{AbstractUnitRange}}, a::AbstractArray
 )
-  # TODO: Check the dimensions.
-  return convert(arrtype, a)
+  ax = (domain..., domain...)
+  a′ = array(a, ax)
+  return convert(arrtype, a′)
 end
 function op_convert(
-  arrtype::Type{<:AbstractArray{<:Any,N}}, domain::Tuple{Vararg{Integer}}, a::AbstractArray
+  arrtype::Type{<:AbstractArray{<:Any,N}},
+  domain::Tuple{Vararg{AbstractUnitRange}},
+  a::AbstractArray,
 ) where {N}
-  size = (domain..., domain...)
-  @assert length(size) == N
-  return convert(arrtype, reshape(a, size))
+  ax = (domain..., domain...)
+  @assert length(ax) == N
+  a′ = reshape(a, length.(ax))
+  a′′ = array(a′, ax)
+  return convert(arrtype, a′′)
 end
 function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{SiteType}})
-  return op_convert(arrtype, length.(domain), n(domain...))
+  domain′ = AbstractUnitRange.(domain)
+  return op_convert(arrtype, domain′, n(domain...))
+end
+
+function (arrtype::Type{<:AbstractArray})(
+  n::OpName, domain::Tuple{Vararg{AbstractUnitRange}}
+)
+  # TODO: Make `(::OpName)(domain...)` constructor process more general inputs.
+  return op_convert(arrtype, domain, n(Int.(length.(domain))...))
 end
 function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{Integer}})
-  return op_convert(arrtype, domain, n(Int.(domain)...))
+  return arrtype(n, Base.oneto.(domain))
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)

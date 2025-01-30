@@ -9,12 +9,14 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [weakdeps]
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
+NamedDimsArrays = "60cbd0c0-df58-4cb7-918c-6f5607b73fde"
 
 [extensions]
-QuantumOperatorDefinitionsITensorBaseExt = "ITensorBase"
+QuantumOperatorDefinitionsITensorBaseExt = ["ITensorBase", "NamedDimsArrays"]
 
 [compat]
 ITensorBase = "0.1.10"
 LinearAlgebra = "1.10"
+NamedDimsArrays = "0.4.0"
 Random = "1.10"
 julia = "1.10"

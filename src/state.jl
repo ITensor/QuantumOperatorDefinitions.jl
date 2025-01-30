@@ -6,14 +6,15 @@ struct StateName{Name,Params}
     return new{N,typeof(params)}(params)
   end
 end
+name(::StateName{N}) where {N} = N
 params(n::StateName) = getfield(n, :params)
 Base.getproperty(n::StateName, name::Symbol) = getfield(params(n), name)
+Base.get(t::StateName, name::Symbol, default) = get(params(t), name, default)
 
 StateName{N}(; kwargs...) where {N} = StateName{N}((; kwargs...))
 
 StateName(s::AbstractString; kwargs...) = StateName{Symbol(s)}(; kwargs...)
 StateName(s::Symbol; kwargs...) = StateName{s}(; kwargs...)
-name(::StateName{N}) where {N} = N
 macro StateName_str(s)
   return StateName{Symbol(s)}
 end
