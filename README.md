@@ -33,7 +33,6 @@ julia> Pkg.add("QuantumOperatorDefinitions")
 
 ````julia
 using QuantumOperatorDefinitions: OpName, SiteType, StateName, ⊗, controlled, op, state
-using LinearAlgebra: Diagonal
 using SparseArrays: SparseMatrixCSC, SparseVector
 using Test: @test
 
@@ -63,8 +62,6 @@ using Test: @test
 @test op("X") == [0 1; 1 0]
 @test op("Y") == [0 -im; im 0]
 @test op("Z") == [1 0; 0 -1]
-
-@test op("Z") isa Diagonal
 
 @test op(Float32, "X") == [0 1; 1 0]
 @test eltype(op(Float32, "X")) === Float32

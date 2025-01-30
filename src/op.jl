@@ -59,6 +59,9 @@ function (arrtype::Type{<:AbstractArray})(
 )
   return arrtype(n, domain)
 end
+function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Tuple{Vararg{Integer}})
+  return arrtype(n, Base.oneto.(domain))
+end
 (arrtype::Type{<:AbstractArray})(n::StateOrOpName, ts::SiteType...) = arrtype(n, ts)
 function (n::StateOrOpName)(domain...)
   # TODO: Try one alias at a time?
@@ -89,50 +92,37 @@ function nsites(n::StateOrOpName)
   return nsites(n′)
 end
 
+# TODO: This does some unwanted conversions, like turning
+# `Diagonal` dense.
 function array(a::AbstractArray, ax::Tuple{Vararg{AbstractUnitRange}})
   return a[ax...]
 end
 
-function op_convert(
-  arrtype::Type{<:AbstractArray{<:Any,N}},
-  domain::Tuple{Vararg{AbstractUnitRange}},
-  a::AbstractArray{<:Any,N},
-) where {N}
-  ax = (domain..., domain...)
-  a′ = array(a, ax)
-  return convert(arrtype, a′)
+function state_or_op_axes(::OpName, domain::Tuple{Vararg{AbstractUnitRange}})
+  return (domain..., domain...)
 end
-function op_convert(
-  arrtype::Type{<:AbstractArray}, domain::Tuple{Vararg{AbstractUnitRange}}, a::AbstractArray
-)
-  ax = (domain..., domain...)
-  a′ = array(a, ax)
-  return convert(arrtype, a′)
-end
-function op_convert(
-  arrtype::Type{<:AbstractArray{<:Any,N}},
+
+function state_or_op_convert(
+  n::StateOrOpName,
+  arrtype::Type{<:AbstractArray},
   domain::Tuple{Vararg{AbstractUnitRange}},
   a::AbstractArray,
-) where {N}
-  ax = (domain..., domain...)
-  @assert length(ax) == N
+)
+  ax = state_or_op_axes(n, domain)
   a′ = reshape(a, length.(ax))
   a′′ = array(a′, ax)
   return convert(arrtype, a′′)
 end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{SiteType}})
-  domain′ = AbstractUnitRange.(domain)
-  return op_convert(arrtype, domain′, n(domain...))
-end
 
+function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Tuple{Vararg{SiteType}})
+  domain′ = AbstractUnitRange.(domain)
+  return state_or_op_convert(n, arrtype, domain′, n(domain...))
+end
 function (arrtype::Type{<:AbstractArray})(
-  n::OpName, domain::Tuple{Vararg{AbstractUnitRange}}
+  n::StateOrOpName, domain::Tuple{Vararg{AbstractUnitRange}}
 )
   # TODO: Make `(::OpName)(domain...)` constructor process more general inputs.
-  return op_convert(arrtype, domain, n(Int.(length.(domain))...))
-end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{Integer}})
-  return arrtype(n, Base.oneto.(domain))
+  return state_or_op_convert(n, arrtype, domain, n(Int.(length.(domain))...))
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
@@ -498,10 +488,10 @@ function (n::OpName"Controlled")(domain...)
   d_control = prod(to_dim.(domain[1:nc]))
   return cat(I(d_control), n.arg(domain[(nc + 1):end]...); dims=(1, 2))
 end
-@op_alias "CNOT" "Controlled" op = OpName"X"()
-@op_alias "CX" "Controlled" op = OpName"X"()
-@op_alias "CY" "Controlled" op = OpName"Y"()
-@op_alias "CZ" "Controlled" op = OpName"Z"()
+@op_alias "CNOT" "Controlled" arg = OpName"X"()
+@op_alias "CX" "Controlled" arg = OpName"X"()
+@op_alias "CY" "Controlled" arg = OpName"Y"()
+@op_alias "CZ" "Controlled" arg = OpName"Z"()
 function alias(n::OpName"CPhase")
   return controlled(OpName"Phase"(; params(n)...))
 end
@@ -524,17 +514,17 @@ function alias(::OpName"CRn")
 end
 @op_alias "CRn̂" "CRn"
 
-@op_alias "CCNOT" "Controlled" ncontrol = 2 op = OpName"X"()
+@op_alias "CCNOT" "Controlled" ncontrol = 2 arg = OpName"X"()
 @op_alias "Toffoli" "CCNOT"
 @op_alias "CCX" "CCNOT"
 @op_alias "TOFF" "CCNOT"
 
-@op_alias "CSWAP" "Controlled" ncontrol = 2 op = OpName"SWAP"()
+@op_alias "CSWAP" "Controlled" ncontrol = 2 arg = OpName"SWAP"()
 @op_alias "Fredkin" "CSWAP"
 @op_alias "CSwap" "CSWAP"
 @op_alias "CS" "CSWAP"
 
-@op_alias "CCCNOT" "Controlled" ncontrol = 3 op = OpName"X"()
+@op_alias "CCCNOT" "Controlled" ncontrol = 3 arg = OpName"X"()
 
 ## # 1-qudit rotation around generic axis n̂.
 ## # exp(-im * α / 2 * n̂ ⋅ σ⃗)

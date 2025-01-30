@@ -32,15 +32,8 @@ macro state_alias(name1, name2, params...)
   return state_alias_expr(name1, name2)
 end
 
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{SiteType}})
-  # TODO: Define `state_convert` to handle reshaping multisite states
-  # to higher order arrays.
-  return convert(arrtype, n(domain...))
-end
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{Integer}})
-  # TODO: Define `state_convert` to handle reshaping multisite states
-  # to higher order arrays.
-  return convert(arrtype, n(Int.(domain)...))
+function state_or_op_axes(::StateName, domain::Tuple{Vararg{AbstractUnitRange}})
+  return domain
 end
 
 # This compiles operator expressions, such as:
