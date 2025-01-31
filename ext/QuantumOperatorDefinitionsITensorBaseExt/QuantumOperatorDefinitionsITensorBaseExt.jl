@@ -3,7 +3,7 @@ module QuantumOperatorDefinitionsITensorBaseExt
 using ITensorBase: ITensorBase, ITensor, Index, dag, gettag, prime
 using NamedDimsArrays: dename
 using QuantumOperatorDefinitions:
-  QuantumOperatorDefinitions, OpName, SiteType, StateName, has_fermion_string
+  QuantumOperatorDefinitions, @OpName_str, OpName, SiteType, StateName, has_fermion_string
 
 function QuantumOperatorDefinitions.SiteType(r::Index)
   # We pass the axis of the (unnamed) Index because
@@ -25,5 +25,8 @@ end
 function Base.axes(::OpName, domain::Tuple{Vararg{Index}})
   return (prime.(domain)..., dag.(domain)...)
 end
+## function Base.axes(::OpName"SWAP", domain::Tuple{Vararg{Index}})
+##   return (prime.(reverse(domain))..., dag.(domain)...)
+## end
 
 end

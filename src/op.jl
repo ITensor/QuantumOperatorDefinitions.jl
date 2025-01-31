@@ -101,6 +101,27 @@ end
 function Base.axes(::OpName, domain::Tuple{Vararg{AbstractUnitRange}})
   return (domain..., domain...)
 end
+function Base.axes(n::StateOrOpName, domain::Tuple{Vararg{Integer}})
+  return axes(n, Base.OneTo.(domain))
+end
+function Base.axes(n::StateOrOpName, domain::Tuple{Vararg{SiteType}})
+  return axes(n, AbstractUnitRange.(domain))
+end
+
+## function Base.axes(::OpName"SWAP", domain::Tuple{Vararg{AbstractUnitRange}})
+##   return (reverse(domain)..., domain...)
+## end
+
+function reversed_sites(n::StateOrOpName, domain)
+  return reverse_sites(n, reshape(n(domain...), length.(axes(n, reverse(domain)))))
+end
+function reverse_sites(n::OpName, a::AbstractArray)
+  ndomain = Int(ndims(a)//2)
+  perm1 = reverse(ntuple(identity, ndomain))
+  perm2 = perm1 .+ ndomain
+  perm = (perm1..., perm2...)
+  return permutedims(a, perm)
+end
 
 function state_or_op_convert(
   n::StateOrOpName,
@@ -116,13 +137,13 @@ end
 
 function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Tuple{Vararg{SiteType}})
   domain′ = AbstractUnitRange.(domain)
-  return state_or_op_convert(n, arrtype, domain′, n(domain...))
+  return state_or_op_convert(n, arrtype, domain′, reversed_sites(n, domain))
 end
 function (arrtype::Type{<:AbstractArray})(
   n::StateOrOpName, domain::Tuple{Vararg{AbstractUnitRange}}
 )
   # TODO: Make `(::OpName)(domain...)` constructor process more general inputs.
-  return state_or_op_convert(n, arrtype, domain, n(Int.(length.(domain))...))
+  return state_or_op_convert(n, arrtype, domain, reversed_sites(n, Int.(length.(domain))))
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
@@ -485,7 +506,7 @@ function (n::OpName"Controlled")(domain...)
   # Number of control sites.
   nc = get(params(n), :ncontrol, length(domain) - nt)
   @assert length(domain) == nc + nt
-  d_control = prod(to_dim.(domain[1:nc]))
+  d_control = prod(to_dim.(domain)) - prod(domain[(nc + 1):end])
   return cat(I(d_control), n.arg(domain[(nc + 1):end]...); dims=(1, 2))
 end
 @op_alias "CNOT" "Controlled" arg = OpName"X"()

@@ -32,10 +32,6 @@ macro state_alias(name1, name2, params...)
   return state_alias_expr(name1, name2)
 end
 
-function Base.axes(::StateName, domain::Tuple{Vararg{AbstractUnitRange}})
-  return domain
-end
-
 # This compiles operator expressions, such as:
 # ```julia
 # stateexpr("0 + 1") == StateName("0") + StateName("1")
@@ -118,6 +114,15 @@ function state_or_op_expr(ntype::Type, ex::Expr, depth::Int)
     return ntype{ex.args[1]}(; kwargs...)
   end
   return error("Can't parse expression $ex.")
+end
+
+function Base.axes(::StateName, domain::Tuple{Vararg{AbstractUnitRange}})
+  return domain
+end
+
+function reverse_sites(n::StateName, a::AbstractArray)
+  perm = reverse(ntuple(identity, ndims(a)))
+  return permutedims(a, perm)
 end
 
 function state(arrtype::Type{<:AbstractArray}, n::Union{Int,String}, domain...; kwargs...)
