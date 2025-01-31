@@ -80,8 +80,8 @@ function Base.AbstractUnitRange(t::SiteType)
   return Base.OneTo(length(t))
 end
 # kwargs are passed for fancier constructors, like `ITensors.Index`.
-function (rangetype::Type{<:AbstractUnitRange})(t::SiteType; kwargs...)
-  return rangetype(AbstractUnitRange(t); kwargs...)
+function (rangetype::Type{<:AbstractUnitRange})(t::SiteType)
+  return rangetype(AbstractUnitRange(t))
 end
 Base.size(t::SiteType) = (length(t),)
 Base.size(t::SiteType, dim::Integer) = size(t)[dim]

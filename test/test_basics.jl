@@ -162,8 +162,10 @@ const elts = (real_elts..., complex_elts...)
     @test op("X * Y + Z") == op("X") * op("Y") + op("Z")
     @test op("X * Y + 2 * Z") == op("X") * op("Y") + 2 * op("Z")
     @test op("exp(im * (X * Y + 2 * Z))") == exp(im * (op("X") * op("Y") + 2 * op("Z")))
-    @test op("exp(im * (X ⊗ Y + Z ⊗ Z))") ==
-      reshape(exp(im * (kron(op("X"), op("Y")) + kron(op("Z"), op("Z")))), (2, 2, 2, 2))
+    @test op("exp(im * (X ⊗ Y + Z ⊗ Z))") == permutedims(
+      reshape(exp(im * (kron(op("X"), op("Y")) + kron(op("Z"), op("Z")))), (2, 2, 2, 2)),
+      (2, 1, 4, 3),
+    )
     @test op("Ry{θ=π/2}") == op("Ry"; θ=π / 2)
     # Awkward parsing corner cases.
     @test op("S+") == Matrix(OpName("S+"))
@@ -201,7 +203,19 @@ const elts = (real_elts..., complex_elts...)
     @test state("2", 3) == [0, 0, 1]
 
     @test state("|0⟩ + 2|+⟩") == state("0") + 2 * state("+")
-    @test state("|0⟩ ⊗ |+⟩") == reshape(kron(state("0"), state("+")), (2, 2))
+    @test state("|0⟩ ⊗ |+⟩") ==
+      permutedims(reshape(kron(state("0"), state("+")), (2, 2)), (2, 1))
+  end
+  @testset "Ranges" begin
+    @test AbstractUnitRange(SiteType("S=1/2")) == Base.OneTo(2)
+    @test UnitRange{Int32}(SiteType("S=1/2")) == Base.OneTo(2)
+    @test UnitRange{Int32}(SiteType("S=1/2")) isa UnitRange{Int32}
+    @test AbstractUnitRange(SiteType("Qudit"; dim=3)) == Base.OneTo(3)
+    @test UnitRange{Int32}(SiteType("Qudit"; dim=3)) == Base.OneTo(3)
+    @test UnitRange{Int32}(SiteType("Qudit"; dim=3)) isa UnitRange{Int32}
+
+    @test op("X", 2) == op("X", Base.OneTo(2))
+    @test op("X", 3) == op("X", Base.OneTo(3))
   end
   @testset "Electron/tJ" begin
     for (ns, x) in (

@@ -506,7 +506,7 @@ function (n::OpName"Controlled")(domain...)
   # Number of control sites.
   nc = get(params(n), :ncontrol, length(domain) - nt)
   @assert length(domain) == nc + nt
-  d_control = prod(to_dim.(domain)) - prod(domain[(nc + 1):end])
+  d_control = prod(to_dim.(domain)) - prod(to_dim.(domain[(nc + 1):end]))
   return cat(I(d_control), n.arg(domain[(nc + 1):end]...); dims=(1, 2))
 end
 @op_alias "CNOT" "Controlled" arg = OpName"X"()

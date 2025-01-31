@@ -1,9 +1,15 @@
 module QuantumOperatorDefinitionsITensorBaseExt
 
-using ITensorBase: ITensorBase, ITensor, Index, dag, gettag, prime
+using ITensorBase: ITensorBase, ITensor, Index, dag, gettag, prime, settag
 using NamedDimsArrays: dename
 using QuantumOperatorDefinitions:
-  QuantumOperatorDefinitions, @OpName_str, OpName, SiteType, StateName, has_fermion_string
+  QuantumOperatorDefinitions,
+  @OpName_str,
+  OpName,
+  SiteType,
+  StateName,
+  has_fermion_string,
+  name
 
 function QuantumOperatorDefinitions.SiteType(r::Index)
   # We pass the axis of the (unnamed) Index because
@@ -14,6 +20,10 @@ function QuantumOperatorDefinitions.SiteType(r::Index)
   return SiteType(
     gettag(r, "sitetype", "Qudit"); dim=Int.(length(r)), range=only(axes(dename(r)))
   )
+end
+
+function (rangetype::Type{<:Index})(t::SiteType)
+  return settag(rangetype(AbstractUnitRange(t)), "sitetype", String(name(t)))
 end
 
 # TODO: Define in terms of `OpName` directly, and define a generic
@@ -28,5 +38,21 @@ end
 ## function Base.axes(::OpName"SWAP", domain::Tuple{Vararg{Index}})
 ##   return (prime.(reverse(domain))..., dag.(domain)...)
 ## end
+
+# Fix ambiguity error with generic `AbstractArray` version.
+function ITensorBase.ITensor(n::Union{OpName,StateName}, domain::Index...)
+  return ITensor(n, domain)
+end
+# Fix ambiguity error with generic `AbstractArray` version.
+function ITensorBase.ITensor(n::Union{OpName,StateName}, domain::Tuple{Vararg{Index}})
+  return ITensor(AbstractArray(n, domain), axes(n, domain))
+end
+function (arrtype::Type{<:AbstractArray})(
+  n::Union{OpName,StateName}, domain::Tuple{Vararg{Index}}
+)
+  # Convert to `SiteType` in case the Index specifies a `"sitetype"` tag.
+  # TODO: Try to build this into the generic codepath.
+  return ITensor(arrtype(n, SiteType.(domain)), axes(n, domain))
+end
 
 end
