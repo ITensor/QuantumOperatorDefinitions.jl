@@ -66,6 +66,9 @@ function Base.length(t::SiteType)
   end
   return length(t′)
 end
+# TODO: Use a shorthand `(t::SiteType)() = AbstractUnitRange(t)`,
+# i.e. make `SiteType` callable like `OpName` and `StateName`
+# are right now.
 function Base.AbstractUnitRange(t::SiteType)
   # This logic allows specifying a range with extra properties,
   # like ones with symmetry sectors.
@@ -75,6 +78,10 @@ function Base.AbstractUnitRange(t::SiteType)
     return combine_axes(Base.OneTo(length(t)), rs...)
   end
   return Base.OneTo(length(t))
+end
+# kwargs are passed for fancier constructors, like `ITensors.Index`.
+function (rangetype::Type{<:AbstractUnitRange})(t::SiteType; kwargs...)
+  return rangetype(AbstractUnitRange(t); kwargs...)
 end
 Base.size(t::SiteType) = (length(t),)
 Base.size(t::SiteType, dim::Integer) = size(t)[dim]
