@@ -1,6 +1,6 @@
 module QuantumOperatorDefinitionsITensorBaseExt
 
-using ITensorBase: ITensor, Index, dag, gettag, prime
+using ITensorBase: ITensorBase, ITensor, Index, dag, gettag, prime
 using NamedDimsArrays: dename
 using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions, OpName, SiteType, StateName, has_fermion_string
@@ -13,6 +13,10 @@ function QuantumOperatorDefinitions.SiteType(r::Index)
   return SiteType(
     gettag(r, "sitetype", "Qudit"); dim=Int.(length(r)), range=only(axes(dename(r)))
   )
+end
+
+function ITensorBase.Index(t::SiteType; kwargs...)
+  return Index(AbstractUnitRange(t); kwargs...)
 end
 
 function QuantumOperatorDefinitions.has_fermion_string(n::String, r::Index)
