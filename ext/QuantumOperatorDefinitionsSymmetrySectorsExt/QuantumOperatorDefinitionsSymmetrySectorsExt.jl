@@ -4,7 +4,7 @@ using BlockArrays: blocklasts, blocklengths
 using GradedUnitRanges: GradedOneTo, gradedrange
 using LabelledNumbers: label, labelled, unlabel
 using QuantumOperatorDefinitions:
-  QuantumOperatorDefinitions, @SiteType_str, @SymmetryType_str, SiteType, SymmetryType, name
+  QuantumOperatorDefinitions, @SiteType_str, @GradingType_str, SiteType, GradingType, name
 using SymmetrySectors: ×, SectorProduct, U1, Z
 
 sortedunion(a, b) = sort(union(a, b))
@@ -21,43 +21,43 @@ end
 QuantumOperatorDefinitions.combine_axes(a::GradedOneTo, b::Base.OneTo) = a
 QuantumOperatorDefinitions.combine_axes(a::Base.OneTo, b::GradedOneTo) = b
 
-function Base.AbstractUnitRange(::SymmetryType"N", t::SiteType)
+function Base.AbstractUnitRange(::GradingType"N", t::SiteType)
   return gradedrange(map(i -> SectorProduct((; N=U1(i - 1))) => 1, 1:length(t)))
 end
-function Base.AbstractUnitRange(::SymmetryType"Sz", t::SiteType)
+function Base.AbstractUnitRange(::GradingType"Sz", t::SiteType)
   return gradedrange(map(i -> SectorProduct((; Sz=U1(i - 1))) => 1, 1:length(t)))
 end
-function Base.AbstractUnitRange(::SymmetryType"Sz↑", t::SiteType)
-  return AbstractUnitRange(SymmetryType"Sz"(), t)
+function Base.AbstractUnitRange(::GradingType"Sz↑", t::SiteType)
+  return AbstractUnitRange(GradingType"Sz"(), t)
 end
-function Base.AbstractUnitRange(::SymmetryType"Sz↓", t::SiteType)
+function Base.AbstractUnitRange(::GradingType"Sz↓", t::SiteType)
   return gradedrange(map(i -> SectorProduct((; Sz=U1(-(i - 1)))) => 1, 1:length(t)))
 end
 
-function sector(symmetrytype::SymmetryType, sec)
-  sectorname = Symbol(get(symmetrytype, :name, name(symmetrytype)))
+function sector(gradingtype::GradingType, sec)
+  sectorname = Symbol(get(gradingtype, :name, name(gradingtype)))
   return SectorProduct(NamedTuple{(sectorname,)}((sec,)))
 end
 
-function Base.AbstractUnitRange(s::SymmetryType"Nf", t::SiteType"Fermion")
+function Base.AbstractUnitRange(s::GradingType"Nf", t::SiteType"Fermion")
   return gradedrange([sector(s, U1(0)) => 1, sector(s, U1(1)) => 1])
 end
-# TODO: Write in terms of `SymmetryType"Nf"` definition.
-function Base.AbstractUnitRange(s::SymmetryType"NfParity", t::SiteType"Fermion")
+# TODO: Write in terms of `GradingType"Nf"` definition.
+function Base.AbstractUnitRange(s::GradingType"NfParity", t::SiteType"Fermion")
   return gradedrange([sector(s, Z{2}(0)) => 1, sector(s, Z{2}(1)) => 1])
 end
-function Base.AbstractUnitRange(s::SymmetryType"Sz", t::SiteType"Fermion")
+function Base.AbstractUnitRange(s::GradingType"Sz", t::SiteType"Fermion")
   return gradedrange([sector(s, U1(0)) => 1, sector(s, U1(1)) => 1])
 end
-function Base.AbstractUnitRange(s::SymmetryType"Sz↑", t::SiteType"Fermion")
+function Base.AbstractUnitRange(s::GradingType"Sz↑", t::SiteType"Fermion")
   return gradedrange([sector(s, U1(0)) => 1, sector(s, U1(1)) => 1])
 end
-function Base.AbstractUnitRange(s::SymmetryType"Sz↓", t::SiteType"Fermion")
+function Base.AbstractUnitRange(s::GradingType"Sz↓", t::SiteType"Fermion")
   return gradedrange([sector(s, U1(0)) => 1, sector(s, U1(-1)) => 1])
 end
 
 # TODO: Write in terms of `SiteType"Fermion"` definitions.
-function Base.AbstractUnitRange(s::SymmetryType"Nf", t::SiteType"Electron")
+function Base.AbstractUnitRange(s::GradingType"Nf", t::SiteType"Electron")
   return gradedrange([
     sector(s, U1(0)) => 1,
     sector(s, U1(1)) => 1,
@@ -65,8 +65,8 @@ function Base.AbstractUnitRange(s::SymmetryType"Nf", t::SiteType"Electron")
     sector(s, U1(2)) => 1,
   ])
 end
-# TODO: Write in terms of `SymmetryType"Nf"` definition.
-function Base.AbstractUnitRange(s::SymmetryType"NfParity", t::SiteType"Electron")
+# TODO: Write in terms of `GradingType"Nf"` definition.
+function Base.AbstractUnitRange(s::GradingType"NfParity", t::SiteType"Electron")
   return gradedrange([
     sector(s, Z{2}(0)) => 1,
     sector(s, Z{2}(1)) => 1,
@@ -74,7 +74,7 @@ function Base.AbstractUnitRange(s::SymmetryType"NfParity", t::SiteType"Electron"
     sector(s, Z{2}(0)) => 1,
   ])
 end
-function Base.AbstractUnitRange(s::SymmetryType"Sz", t::SiteType"Electron")
+function Base.AbstractUnitRange(s::GradingType"Sz", t::SiteType"Electron")
   return gradedrange([
     sector(s, U1(0)) => 1,
     sector(s, U1(1)) => 1,

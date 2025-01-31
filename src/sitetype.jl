@@ -29,33 +29,33 @@ end
 combine_axes(a) = a
 combine_axes(a, b, rest...) = combine_axes(combine_axes(a, b), rest...)
 
-struct SymmetryType{T,Params}
+struct GradingType{T,Params}
   params::Params
-  function SymmetryType{N}(params::NamedTuple) where {N}
+  function GradingType{N}(params::NamedTuple) where {N}
     return new{N,typeof(params)}(params)
   end
 end
-name(::SymmetryType{T}) where {T} = T
-params(t::SymmetryType) = getfield(t, :params)
-Base.getproperty(t::SymmetryType, name::Symbol) = getfield(params(t), name)
-Base.get(t::SymmetryType, name::Symbol, default) = get(params(t), name, default)
-Base.haskey(t::SymmetryType, name::Symbol) = haskey(params(t), name)
-SymmetryType{N}(; kwargs...) where {N} = SymmetryType{N}((; kwargs...))
-SymmetryType(s::AbstractString; kwargs...) = SymmetryType{Symbol(s)}(; kwargs...)
-function SymmetryType(s::Pair{<:AbstractString,<:AbstractString}; kwargs...)
-  return SymmetryType(first(s); kwargs..., name=last(s))
+name(::GradingType{T}) where {T} = T
+params(t::GradingType) = getfield(t, :params)
+Base.getproperty(t::GradingType, name::Symbol) = getfield(params(t), name)
+Base.get(t::GradingType, name::Symbol, default) = get(params(t), name, default)
+Base.haskey(t::GradingType, name::Symbol) = haskey(params(t), name)
+GradingType{N}(; kwargs...) where {N} = GradingType{N}((; kwargs...))
+GradingType(s::AbstractString; kwargs...) = GradingType{Symbol(s)}(; kwargs...)
+function GradingType(s::Pair{<:AbstractString,<:AbstractString}; kwargs...)
+  return GradingType(first(s); kwargs..., name=last(s))
 end
-function SymmetryType(s::Pair{<:AbstractString,<:NamedTuple}; kwargs...)
-  return SymmetryType(first(s); kwargs..., last(s)...)
+function GradingType(s::Pair{<:AbstractString,<:NamedTuple}; kwargs...)
+  return GradingType(first(s); kwargs..., last(s)...)
 end
-macro SymmetryType_str(s)
-  return :(SymmetryType{$(Expr(:quote, Symbol(s)))})
+macro GradingType_str(s)
+  return :(GradingType{$(Expr(:quote, Symbol(s)))})
 end
 
-function Base.AbstractUnitRange(symmetry::SymmetryType, t::SiteType)
+function Base.AbstractUnitRange(grading::GradingType, t::SiteType)
   return error("Not implemented.")
 end
-function Base.AbstractUnitRange(symmetry::SymmetryType"Trivial", t::SiteType)
+function Base.AbstractUnitRange(grading::GradingType"Trivial", t::SiteType)
   return Base.OneTo(length(t))
 end
 
@@ -70,8 +70,8 @@ function Base.AbstractUnitRange(t::SiteType)
   # This logic allows specifying a range with extra properties,
   # like ones with symmetry sectors.
   haskey(t, :range) && return t.range
-  if haskey(t, :symmetries)
-    rs = map(symmetry -> AbstractUnitRange(SymmetryType(symmetry), t), t.symmetries)
+  if haskey(t, :gradings)
+    rs = map(grading -> AbstractUnitRange(GradingType(grading), t), t.gradings)
     return combine_axes(Base.OneTo(length(t)), rs...)
   end
   return Base.OneTo(length(t))
