@@ -98,7 +98,7 @@ function array(a::AbstractArray, ax::Tuple{Vararg{AbstractUnitRange}})
   return a[ax...]
 end
 
-function state_or_op_axes(::OpName, domain::Tuple{Vararg{AbstractUnitRange}})
+function Base.axes(::OpName, domain::Tuple{Vararg{AbstractUnitRange}})
   return (domain..., domain...)
 end
 
@@ -108,7 +108,7 @@ function state_or_op_convert(
   domain::Tuple{Vararg{AbstractUnitRange}},
   a::AbstractArray,
 )
-  ax = state_or_op_axes(n, domain)
+  ax = axes(n, domain)
   a′ = reshape(a, length.(ax))
   a′′ = array(a′, ax)
   return convert(arrtype, a′′)

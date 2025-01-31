@@ -22,4 +22,8 @@ function QuantumOperatorDefinitions.has_fermion_string(n::String, r::Index)
   return has_fermion_string(OpName(n), SiteType(r))
 end
 
+function Base.axes(::OpName, domain::Tuple{Vararg{Index}})
+  return (prime.(domain)..., dag.(domain)...)
+end
+
 end

@@ -32,7 +32,7 @@ macro state_alias(name1, name2, params...)
   return state_alias_expr(name1, name2)
 end
 
-function state_or_op_axes(::StateName, domain::Tuple{Vararg{AbstractUnitRange}})
+function Base.axes(::StateName, domain::Tuple{Vararg{AbstractUnitRange}})
   return domain
 end
 
