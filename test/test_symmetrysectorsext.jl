@@ -54,10 +54,10 @@ using Test: @test, @test_broken, @testset
   @test blocklabels(r2) == [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(-1)))]
   @test blocklengths(r2) == [1, 1]
 
-  # TODO: There is a bug slicing `BitVector` by `GradedOneTo`, investigate.
-  # See: https://github.com/ITensor/GradedUnitRanges.jl/issues/9
+  # TODO: There is a bug slicing `BitVector` by `GradedOneTo` in Julia 1.11,
+  # investigate. See: https://github.com/ITensor/GradedUnitRanges.jl/issues/9
   t = SiteType("S=1/2"; gradings=("Sz",))
-  @test_broken state("0", t)
+  @test state("0", t) == [1, 0] broken = VERSION ≥ v"1.11"
 
   # Force conversion to `Vector{Float64}` before conversion,
   # since there is a bug slicing `BitVector` by `GradedOneTo`.
