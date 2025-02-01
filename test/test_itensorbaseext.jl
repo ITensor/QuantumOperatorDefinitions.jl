@@ -1,6 +1,6 @@
 using ITensorBase: ITensor, Index, gettag, prime, settag
 using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, state
-using Test: @test, @test_broken, @testset
+using Test: @test, @testset
 
 @testset "ITensorBaseExt" begin
   i = Index(SiteType("S=1/2"))

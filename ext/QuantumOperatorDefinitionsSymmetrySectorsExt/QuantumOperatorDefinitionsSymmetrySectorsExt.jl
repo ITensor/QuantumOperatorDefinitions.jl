@@ -1,11 +1,21 @@
 module QuantumOperatorDefinitionsSymmetrySectorsExt
 
 using BlockArrays: blocklasts, blocklengths
-using GradedUnitRanges: GradedOneTo, gradedrange
+using GradedUnitRanges: AbstractGradedUnitRange, GradedOneTo, gradedrange
 using LabelledNumbers: label, labelled, unlabel
 using QuantumOperatorDefinitions:
-  QuantumOperatorDefinitions, @SiteType_str, @GradingType_str, SiteType, GradingType, name
-using SymmetrySectors: ×, SectorProduct, U1, Z
+  QuantumOperatorDefinitions,
+  @SiteType_str,
+  @GradingType_str,
+  SiteType,
+  GradingType,
+  OpName,
+  name
+using SymmetrySectors: ×, dual, SectorProduct, U1, Z
+
+function Base.axes(::OpName, domain::Tuple{Vararg{AbstractGradedUnitRange}})
+  return (domain..., dual.(domain)...)
+end
 
 sortedunion(a, b) = sort(union(a, b))
 function QuantumOperatorDefinitions.combine_axes(a1::GradedOneTo, a2::GradedOneTo)
