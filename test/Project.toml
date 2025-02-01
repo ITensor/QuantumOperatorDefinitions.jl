@@ -1,5 +1,6 @@
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 BlockSparseArrays = "2c9a651f-6452-4ace-a6ac-809f4280fbb4"
 GradedUnitRanges = "e2de450a-8a67-46c7-b59c-01d5a3d041c5"
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
