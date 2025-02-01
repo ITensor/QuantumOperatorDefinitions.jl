@@ -8,8 +8,8 @@ struct OpName{Name,Params}
 end
 name(::OpName{Name}) where {Name} = Name
 params(n::OpName) = getfield(n, :params)
-
 Base.getproperty(n::OpName, name::Symbol) = getfield(params(n), name)
+Base.get(t::OpName, name::Symbol, default) = get(params(t), name, default)
 
 OpName{N}(; kwargs...) where {N} = OpName{N}((; kwargs...))
 
@@ -54,8 +54,13 @@ end
 # Generic to `StateName` or `OpName`.
 const StateOrOpName = Union{StateName,OpName}
 alias(n::StateOrOpName) = n
-function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Integer...)
+function (arrtype::Type{<:AbstractArray})(
+  n::StateOrOpName, domain::Union{Integer,AbstractUnitRange}...
+)
   return arrtype(n, domain)
+end
+function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Tuple{Vararg{Integer}})
+  return arrtype(n, Base.oneto.(domain))
 end
 (arrtype::Type{<:AbstractArray})(n::StateOrOpName, ts::SiteType...) = arrtype(n, ts)
 function (n::StateOrOpName)(domain...)
@@ -87,32 +92,58 @@ function nsites(n::StateOrOpName)
   return nsites(n′)
 end
 
-function op_convert(
-  arrtype::Type{<:AbstractArray{<:Any,N}},
-  domain::Tuple{Vararg{Integer}},
-  a::AbstractArray{<:Any,N},
-) where {N}
-  # TODO: Check the dimensions.
-  return convert(arrtype, a)
+# TODO: This does some unwanted conversions, like turning
+# `Diagonal` dense.
+function array(a::AbstractArray, ax::Tuple{Vararg{AbstractUnitRange}})
+  return a[ax...]
 end
-function op_convert(
-  arrtype::Type{<:AbstractArray}, domain::Tuple{Vararg{Integer}}, a::AbstractArray
+
+function Base.axes(::OpName, domain::Tuple{Vararg{AbstractUnitRange}})
+  return (domain..., domain...)
+end
+function Base.axes(n::StateOrOpName, domain::Tuple{Vararg{Integer}})
+  return axes(n, Base.OneTo.(domain))
+end
+function Base.axes(n::StateOrOpName, domain::Tuple{Vararg{SiteType}})
+  return axes(n, AbstractUnitRange.(domain))
+end
+
+## function Base.axes(::OpName"SWAP", domain::Tuple{Vararg{AbstractUnitRange}})
+##   return (reverse(domain)..., domain...)
+## end
+
+function reversed_sites(n::StateOrOpName, domain)
+  return reverse_sites(n, reshape(n(domain...), length.(axes(n, reverse(domain)))))
+end
+function reverse_sites(n::OpName, a::AbstractArray)
+  ndomain = Int(ndims(a)//2)
+  perm1 = reverse(ntuple(identity, ndomain))
+  perm2 = perm1 .+ ndomain
+  perm = (perm1..., perm2...)
+  return permutedims(a, perm)
+end
+
+function state_or_op_convert(
+  n::StateOrOpName,
+  arrtype::Type{<:AbstractArray},
+  domain::Tuple{Vararg{AbstractUnitRange}},
+  a::AbstractArray,
 )
-  # TODO: Check the dimensions.
-  return convert(arrtype, a)
+  ax = axes(n, domain)
+  a′ = reshape(a, length.(ax))
+  a′′ = array(a′, ax)
+  return convert(arrtype, a′′)
 end
-function op_convert(
-  arrtype::Type{<:AbstractArray{<:Any,N}}, domain::Tuple{Vararg{Integer}}, a::AbstractArray
-) where {N}
-  size = (domain..., domain...)
-  @assert length(size) == N
-  return convert(arrtype, reshape(a, size))
+
+function (arrtype::Type{<:AbstractArray})(n::StateOrOpName, domain::Tuple{Vararg{SiteType}})
+  domain′ = AbstractUnitRange.(domain)
+  return state_or_op_convert(n, arrtype, domain′, reversed_sites(n, domain))
 end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{SiteType}})
-  return op_convert(arrtype, length.(domain), n(domain...))
-end
-function (arrtype::Type{<:AbstractArray})(n::OpName, domain::Tuple{Vararg{Integer}})
-  return op_convert(arrtype, domain, n(Int.(domain)...))
+function (arrtype::Type{<:AbstractArray})(
+  n::StateOrOpName, domain::Tuple{Vararg{AbstractUnitRange}}
+)
+  # TODO: Make `(::OpName)(domain...)` constructor process more general inputs.
+  return state_or_op_convert(n, arrtype, domain, reversed_sites(n, Int.(length.(domain))))
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
@@ -475,13 +506,13 @@ function (n::OpName"Controlled")(domain...)
   # Number of control sites.
   nc = get(params(n), :ncontrol, length(domain) - nt)
   @assert length(domain) == nc + nt
-  d_control = prod(to_dim.(domain[1:nc]))
+  d_control = prod(to_dim.(domain)) - prod(to_dim.(domain[(nc + 1):end]))
   return cat(I(d_control), n.arg(domain[(nc + 1):end]...); dims=(1, 2))
 end
-@op_alias "CNOT" "Controlled" op = OpName"X"()
-@op_alias "CX" "Controlled" op = OpName"X"()
-@op_alias "CY" "Controlled" op = OpName"Y"()
-@op_alias "CZ" "Controlled" op = OpName"Z"()
+@op_alias "CNOT" "Controlled" arg = OpName"X"()
+@op_alias "CX" "Controlled" arg = OpName"X"()
+@op_alias "CY" "Controlled" arg = OpName"Y"()
+@op_alias "CZ" "Controlled" arg = OpName"Z"()
 function alias(n::OpName"CPhase")
   return controlled(OpName"Phase"(; params(n)...))
 end
@@ -504,17 +535,17 @@ function alias(::OpName"CRn")
 end
 @op_alias "CRn̂" "CRn"
 
-@op_alias "CCNOT" "Controlled" ncontrol = 2 op = OpName"X"()
+@op_alias "CCNOT" "Controlled" ncontrol = 2 arg = OpName"X"()
 @op_alias "Toffoli" "CCNOT"
 @op_alias "CCX" "CCNOT"
 @op_alias "TOFF" "CCNOT"
 
-@op_alias "CSWAP" "Controlled" ncontrol = 2 op = OpName"SWAP"()
+@op_alias "CSWAP" "Controlled" ncontrol = 2 arg = OpName"SWAP"()
 @op_alias "Fredkin" "CSWAP"
 @op_alias "CSwap" "CSWAP"
 @op_alias "CS" "CSWAP"
 
-@op_alias "CCCNOT" "Controlled" ncontrol = 3 op = OpName"X"()
+@op_alias "CCCNOT" "Controlled" ncontrol = 3 arg = OpName"X"()
 
 ## # 1-qudit rotation around generic axis n̂.
 ## # exp(-im * α / 2 * n̂ ⋅ σ⃗)

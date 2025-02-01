@@ -6,14 +6,15 @@ struct StateName{Name,Params}
     return new{N,typeof(params)}(params)
   end
 end
+name(::StateName{N}) where {N} = N
 params(n::StateName) = getfield(n, :params)
 Base.getproperty(n::StateName, name::Symbol) = getfield(params(n), name)
+Base.get(t::StateName, name::Symbol, default) = get(params(t), name, default)
 
 StateName{N}(; kwargs...) where {N} = StateName{N}((; kwargs...))
 
 StateName(s::AbstractString; kwargs...) = StateName{Symbol(s)}(; kwargs...)
 StateName(s::Symbol; kwargs...) = StateName{s}(; kwargs...)
-name(::StateName{N}) where {N} = N
 macro StateName_str(s)
   return StateName{Symbol(s)}
 end
@@ -29,17 +30,6 @@ function state_alias_expr(name1, name2, pars...)
 end
 macro state_alias(name1, name2, params...)
   return state_alias_expr(name1, name2)
-end
-
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{SiteType}})
-  # TODO: Define `state_convert` to handle reshaping multisite states
-  # to higher order arrays.
-  return convert(arrtype, n(domain...))
-end
-function (arrtype::Type{<:AbstractArray})(n::StateName, domain::Tuple{Vararg{Integer}})
-  # TODO: Define `state_convert` to handle reshaping multisite states
-  # to higher order arrays.
-  return convert(arrtype, n(Int.(domain)...))
 end
 
 # This compiles operator expressions, such as:
@@ -124,6 +114,15 @@ function state_or_op_expr(ntype::Type, ex::Expr, depth::Int)
     return ntype{ex.args[1]}(; kwargs...)
   end
   return error("Can't parse expression $ex.")
+end
+
+function Base.axes(::StateName, domain::Tuple{Vararg{AbstractUnitRange}})
+  return domain
+end
+
+function reverse_sites(n::StateName, a::AbstractArray)
+  perm = reverse(ntuple(identity, ndims(a)))
+  return permutedims(a, perm)
 end
 
 function state(arrtype::Type{<:AbstractArray}, n::Union{Int,String}, domain...; kwargs...)

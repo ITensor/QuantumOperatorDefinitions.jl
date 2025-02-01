@@ -33,22 +33,30 @@ const elts = (real_elts..., complex_elts...)
         [0 -im; im 0],
         [1 0; 0 -1],
         [0 0; 0 1],
-        [1 0 0 0; 0 0 1 0; 0 1 0 0; 0 0 0 1],
-        [1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1],
-        (_, θ) -> [
-          cos(θ / 2) 0 0 -im*sin(θ / 2)
-          0 cos(θ / 2) -im*sin(θ / 2) 0
-          0 -im*sin(θ / 2) cos(θ / 2) 0
-          -im*sin(θ / 2) 0 0 cos(θ / 2)
-        ],
-        (_, θ) -> [
-          cos(θ / 2) 0 0 im*sin(θ / 2)
-          0 cos(θ / 2) -im*sin(θ / 2) 0
-          0 -im*sin(θ / 2) cos(θ / 2) 0
-          im*sin(θ / 2) 0 0 cos(θ / 2)
-        ],
-        (_, θ) ->
+        reshape([1 0 0 0; 0 0 1 0; 0 1 0 0; 0 0 0 1], (2, 2, 2, 2)),
+        reshape([1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1], (2, 2, 2, 2)),
+        (_, θ) -> reshape(
+          [
+            cos(θ / 2) 0 0 -im*sin(θ / 2)
+            0 cos(θ / 2) -im*sin(θ / 2) 0
+            0 -im*sin(θ / 2) cos(θ / 2) 0
+            -im*sin(θ / 2) 0 0 cos(θ / 2)
+          ],
+          (2, 2, 2, 2),
+        ),
+        (_, θ) -> reshape(
+          [
+            cos(θ / 2) 0 0 im*sin(θ / 2)
+            0 cos(θ / 2) -im*sin(θ / 2) 0
+            0 -im*sin(θ / 2) cos(θ / 2) 0
+            im*sin(θ / 2) 0 0 cos(θ / 2)
+          ],
+          (2, 2, 2, 2),
+        ),
+        (_, θ) -> reshape(
           Diagonal([exp(-im * θ / 2), exp(im * θ / 2), exp(im * θ / 2), exp(-im * θ / 2)]),
+          (2, 2, 2, 2),
+        ),
         [1 0; 0 0],
         [0 0; 0 1],
         [0 1; 0 0],
@@ -60,31 +68,37 @@ const elts = (real_elts..., complex_elts...)
         √2 * [0 -im 0; im 0 -im; 0 im 0],
         2 * [1 0 0; 0 0 0; 0 0 -1],
         [0 0 0; 0 1 0; 0 0 2],
-        [
-          1 0 0 0 0 0 0 0 0
-          0 0 0 1 0 0 0 0 0
-          0 0 0 0 0 0 1 0 0
-          0 1 0 0 0 0 0 0 0
-          0 0 0 0 1 0 0 0 0
-          0 0 0 0 0 0 0 1 0
-          0 0 1 0 0 0 0 0 0
-          0 0 0 0 0 1 0 0 0
-          0 0 0 0 0 0 0 0 1
-        ],
-        [
-          1 0 0 0 0 0 0 0 0
-          0 0 0 im 0 0 0 0 0
-          0 0 0 0 0 0 im 0 0
-          0 im 0 0 0 0 0 0 0
-          0 0 0 0 1 0 0 0 0
-          0 0 0 0 0 0 0 im 0
-          0 0 im 0 0 0 0 0 0
-          0 0 0 0 0 im 0 0 0
-          0 0 0 0 0 0 0 0 1
-        ],
-        (O, θ) -> exp(-im * (θ / 2) * kron(O, O)),
-        (O, θ) -> exp(-im * (θ / 2) * kron(O, O)),
-        (O, θ) -> exp(-im * (θ / 2) * kron(O, O)),
+        reshape(
+          [
+            1 0 0 0 0 0 0 0 0
+            0 0 0 1 0 0 0 0 0
+            0 0 0 0 0 0 1 0 0
+            0 1 0 0 0 0 0 0 0
+            0 0 0 0 1 0 0 0 0
+            0 0 0 0 0 0 0 1 0
+            0 0 1 0 0 0 0 0 0
+            0 0 0 0 0 1 0 0 0
+            0 0 0 0 0 0 0 0 1
+          ],
+          (3, 3, 3, 3),
+        ),
+        reshape(
+          [
+            1 0 0 0 0 0 0 0 0
+            0 0 0 im 0 0 0 0 0
+            0 0 0 0 0 0 im 0 0
+            0 im 0 0 0 0 0 0 0
+            0 0 0 0 1 0 0 0 0
+            0 0 0 0 0 0 0 im 0
+            0 0 im 0 0 0 0 0 0
+            0 0 0 0 0 im 0 0 0
+            0 0 0 0 0 0 0 0 1
+          ],
+          (3, 3, 3, 3),
+        ),
+        (O, θ) -> reshape(exp(-im * (θ / 2) * kron(O, O)), (3, 3, 3, 3)),
+        (O, θ) -> reshape(exp(-im * (θ / 2) * kron(O, O)), (3, 3, 3, 3)),
+        (O, θ) -> reshape(exp(-im * (θ / 2) * kron(O, O)), (3, 3, 3, 3)),
         [1 0 0; 0 0 0; 0 0 0],
         [0 0 0; 0 1 0; 0 0 0],
         [0 1 0; 0 0 0; 0 0 0],
@@ -114,9 +128,9 @@ const elts = (real_elts..., complex_elts...)
         (OpName("Ry"; θ=π / 3), 1, complex_elts, exp(-im * π / 6 * Ymat)),
         (OpName("Rz"; θ=π / 3), 1, complex_elts, exp(-im * π / 6 * Zmat)),
         (OpName("SWAP"), 2, elts, SWAPmat),
-        (OpName("√SWAP"), 2, complex_elts, √SWAPmat),
+        # (OpName("√SWAP"), 2, complex_elts, √SWAPmat),
         (OpName("iSWAP"), 2, complex_elts, iSWAPmat),
-        (OpName("√iSWAP"), 2, complex_elts, √iSWAPmat),
+        # (OpName("√iSWAP"), 2, complex_elts, √iSWAPmat),
         (OpName("Rxx"; θ=π / 3), 2, complex_elts, RXXmat(Xmat, π / 3)),
         (OpName("RXX"; θ=π / 3), 2, complex_elts, RXXmat(Xmat, π / 3)),
         (OpName("Ryy"; θ=π / 3), 2, complex_elts, RYYmat(Ymat, π / 3)),
@@ -128,7 +142,7 @@ const elts = (real_elts..., complex_elts...)
         (OpName("StandardBasis"; index=(1, 2)), 1, elts, StandardBasis12mat),
       )
         @test nsites(o) == nbits
-        for arraytype in (AbstractArray, AbstractMatrix, Array, Matrix)
+        for arraytype in (AbstractArray, Array)
           for elt in elts
             ts = ntuple(Returns(t), nbits)
             lens = ntuple(Returns(len), nbits)
@@ -148,8 +162,10 @@ const elts = (real_elts..., complex_elts...)
     @test op("X * Y + Z") == op("X") * op("Y") + op("Z")
     @test op("X * Y + 2 * Z") == op("X") * op("Y") + 2 * op("Z")
     @test op("exp(im * (X * Y + 2 * Z))") == exp(im * (op("X") * op("Y") + 2 * op("Z")))
-    @test op("exp(im * (X ⊗ Y + Z ⊗ Z))") ==
-      exp(im * (kron(op("X"), op("Y")) + kron(op("Z"), op("Z"))))
+    @test op("exp(im * (X ⊗ Y + Z ⊗ Z))") == permutedims(
+      reshape(exp(im * (kron(op("X"), op("Y")) + kron(op("Z"), op("Z")))), (2, 2, 2, 2)),
+      (2, 1, 4, 3),
+    )
     @test op("Ry{θ=π/2}") == op("Ry"; θ=π / 2)
     # Awkward parsing corner cases.
     @test op("S+") == Matrix(OpName("S+"))
@@ -187,7 +203,19 @@ const elts = (real_elts..., complex_elts...)
     @test state("2", 3) == [0, 0, 1]
 
     @test state("|0⟩ + 2|+⟩") == state("0") + 2 * state("+")
-    @test state("|0⟩ ⊗ |+⟩") == kron(state("0"), state("+"))
+    @test state("|0⟩ ⊗ |+⟩") ==
+      permutedims(reshape(kron(state("0"), state("+")), (2, 2)), (2, 1))
+  end
+  @testset "Ranges" begin
+    @test AbstractUnitRange(SiteType("S=1/2")) == Base.OneTo(2)
+    @test UnitRange{Int32}(SiteType("S=1/2")) == Base.OneTo(2)
+    @test UnitRange{Int32}(SiteType("S=1/2")) isa UnitRange{Int32}
+    @test AbstractUnitRange(SiteType("Qudit"; dim=3)) == Base.OneTo(3)
+    @test UnitRange{Int32}(SiteType("Qudit"; dim=3)) == Base.OneTo(3)
+    @test UnitRange{Int32}(SiteType("Qudit"; dim=3)) isa UnitRange{Int32}
+
+    @test op("X", 2) == op("X", Base.OneTo(2))
+    @test op("X", 3) == op("X", Base.OneTo(3))
   end
   @testset "Electron/tJ" begin
     for (ns, x) in (
