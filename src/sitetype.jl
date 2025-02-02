@@ -95,3 +95,26 @@ to_dim(d::Integer) = d
 # TODO: Decide on this.
 # TODO: Move to `sitetype.jl`.
 default_sitetype() = SiteType"Qubit"()
+
+# TODO: Do we want to define this?
+# (t::SiteType)() = AbstractUnitRange(t)
+
+function site(rangetype::Type{<:AbstractUnitRange}, name::String; kwargs...)
+  return rangetype(SiteType(name; kwargs...))
+end
+site(name::String; kwargs...) = site(AbstractUnitRange, name; kwargs...)
+
+function sites(rangetype::Type{<:AbstractUnitRange}, name::String, positions; kwargs...)
+  return map(position -> site(rangetype, name; site=position, kwargs...), positions)
+end
+function sites(
+  rangetype::Type{<:AbstractUnitRange}, name::String, npositions::Integer; kwargs...
+)
+  return sites(rangetype, name, Base.OneTo(npositions); kwargs...)
+end
+function sites(name::String, positions; kwargs...)
+  return sites(AbstractUnitRange, name, positions; kwargs...)
+end
+function sites(name::String, npositions::Integer; kwargs...)
+  return sites(AbstractUnitRange, name, Base.OneTo(npositions); kwargs...)
+end
