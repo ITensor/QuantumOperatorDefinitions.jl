@@ -23,7 +23,12 @@ function QuantumOperatorDefinitions.SiteType(r::Index)
 end
 
 function (rangetype::Type{<:Index})(t::SiteType)
-  return settag(rangetype(AbstractUnitRange(t)), "sitetype", String(name(t)))
+  i = rangetype(AbstractUnitRange(t))
+  i = settag(i, "sitetype", String(name(t)))
+  if haskey(t, :site)
+    i = settag(i, "site", string(t.site))
+  end
+  return i
 end
 
 # TODO: Define in terms of `OpName` directly, and define a generic

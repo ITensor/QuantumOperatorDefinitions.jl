@@ -1,5 +1,6 @@
-using ITensorBase: ITensor, Index, gettag, prime, settag
-using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, state
+using ITensorBase: ITensor, Index, gettag, hastag, prime, settag
+using NamedDimsArrays: dename
+using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, site, sites, state
 using Test: @test, @testset
 
 @testset "ITensorBaseExt" begin
@@ -61,4 +62,30 @@ using Test: @test, @testset
   @test a[i1′[2], i2′, i1[1], i2] == zeros(i2′, i2)
   @test a[i1′[1], i2′, i1[2], i2] == zeros(i2′, i2)
   @test a[i1′[2], i2′, i1[2], i2] == op("X", i2)
+
+  i = site(Index, "Qudit"; dim=3)
+  @test dename(i) == Base.OneTo(3)
+  @test gettag(i, "sitetype") == "Qudit"
+  @test !hastag(i, "site")
+
+  for is in (
+    sites(Index, "Qudit", 3; dim=3),
+    sites(Index, "Qudit", 1:3; dim=3),
+    sites(Index, "Qudit", (1, 2, 3); dim=3),
+  )
+    @test length(is) == 3
+    for (pos, i) in pairs(is)
+      @test dename(i) == Base.OneTo(3)
+      @test gettag(i, "sitetype") == "Qudit"
+      @test gettag(i, "site") == "$pos"
+    end
+  end
+
+  is = sites(Index, "Qudit", 2:4; dim=3)
+  @test dename(is[1]) == Base.OneTo(3)
+  @test gettag(is[1], "site") == "2"
+  @test dename(is[2]) == Base.OneTo(3)
+  @test gettag(is[2], "site") == "3"
+  @test dename(is[3]) == Base.OneTo(3)
+  @test gettag(is[3], "site") == "4"
 end

@@ -1,4 +1,5 @@
-using QuantumOperatorDefinitions: OpName, SiteType, ⊗, expand, op, opexpr, state, nsites
+using QuantumOperatorDefinitions:
+  OpName, SiteType, ⊗, expand, nsites, op, opexpr, site, sites, state
 using LinearAlgebra: Diagonal, I
 using Test: @test, @testset
 
@@ -216,6 +217,35 @@ const elts = (real_elts..., complex_elts...)
 
     @test op("X", 2) == op("X", Base.OneTo(2))
     @test op("X", 3) == op("X", Base.OneTo(3))
+  end
+  @testset "site, sites" begin
+    s = site("Qudit"; dim=3)
+    @test s === Base.OneTo(3)
+
+    s = site(AbstractUnitRange{Int32}, "Qudit"; dim=3)
+    @test s === Base.OneTo(Int32(3))
+
+    for ss in (sites("Qudit", 4; dim=3), sites("Qudit", 2:5; dim=3))
+      @test length(ss) == 4
+      @test ss == map(Returns(Base.OneTo(3)), 1:4)
+      for s in ss
+        @test s === Base.OneTo(3)
+      end
+    end
+
+    for ss in (
+      sites(AbstractUnitRange{Int32}, "Qudit", 4; dim=3),
+      sites(AbstractUnitRange{Int32}, "Qudit", 2:5; dim=3),
+    )
+      @test length(ss) == 4
+      @test ss == map(Returns(Base.OneTo(3)), 1:4)
+      for s in ss
+        @test s === Base.OneTo(Int32(3))
+      end
+    end
+
+    ss = sites("Qudit", (1, 2, 3); dim=3)
+    @test ss === (Base.OneTo(3), Base.OneTo(3), Base.OneTo(3))
   end
   @testset "Electron/tJ" begin
     for (ns, x) in (
