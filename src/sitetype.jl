@@ -79,7 +79,6 @@ function Base.AbstractUnitRange(t::SiteType)
   end
   return Base.OneTo(length(t))
 end
-# kwargs are passed for fancier constructors, like `ITensors.Index`.
 function (rangetype::Type{<:AbstractUnitRange})(t::SiteType)
   return rangetype(AbstractUnitRange(t))
 end
