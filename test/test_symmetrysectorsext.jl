@@ -76,8 +76,7 @@ using Test: @test, @test_broken, @testset
   (r1, r2) = axes(a)
   @test blocklabels(r1) == [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(1)))]
   @test blocklengths(r1) == [1, 1]
-  @test blocklabels(r2) ==
-    [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(-1)))]
+  @test blocklabels(r2) == [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(-1)))]
   @test blocklengths(r2) == [1, 1]
 end
 
@@ -99,7 +98,6 @@ end
   (r1, r2) = axes(a′)
   @test blocklabels(r1) == [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(1)))]
   @test blocklengths(r1) == [1, 1]
-  @test blocklabels(r2) ==
-    [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(-1)))]
+  @test blocklabels(r2) == [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(-1)))]
   @test blocklengths(r2) == [1, 1]
 end
