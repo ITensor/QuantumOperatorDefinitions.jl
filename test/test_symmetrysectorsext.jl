@@ -5,7 +5,7 @@ using ITensorBase: ITensor, Index, gettag, prime, settag
 using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, state
 using SymmetrySectors: SectorProduct, U1, Z
 using NamedDimsArrays: dename
-using Test: @test, @test_broken, @testset
+using Test: @test, @testset
 
 @testset "SymmetrySectorsExt" begin
   t = SiteType("S=1/2"; gradings=("Sz",))
@@ -54,10 +54,8 @@ using Test: @test, @test_broken, @testset
   @test blocklabels(r2) == [SectorProduct((; Sz=U1(0))), SectorProduct((; Sz=U1(-1)))]
   @test blocklengths(r2) == [1, 1]
 
-  # TODO: There is a bug slicing `BitVector` by `GradedOneTo` in Julia 1.11,
-  # investigate. See: https://github.com/ITensor/GradedUnitRanges.jl/issues/9
   t = SiteType("S=1/2"; gradings=("Sz",))
-  @test state("0", t) == [1, 0] broken = VERSION ≥ v"1.11"
+  @test state("0", t) == [1, 0]
 
   # Force conversion to `Vector{Float64}` before conversion,
   # since there is a bug slicing `BitVector` by `GradedOneTo`.
