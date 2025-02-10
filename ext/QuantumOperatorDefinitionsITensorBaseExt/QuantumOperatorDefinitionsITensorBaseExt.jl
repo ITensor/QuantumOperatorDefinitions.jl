@@ -1,6 +1,7 @@
 module QuantumOperatorDefinitionsITensorBaseExt
 
-using ITensorBase: ITensorBase, ITensor, Index, dag, gettag, prime, settag
+using ITensorBase: ITensorBase, ITensor, Index, gettag, prime, settag
+using GradedUnitRanges: dual
 using NamedDimsArrays: dename
 using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions,
@@ -38,7 +39,7 @@ function QuantumOperatorDefinitions.has_fermion_string(n::String, r::Index)
 end
 
 function Base.axes(::OpName, domain::Tuple{Vararg{Index}})
-  return (prime.(domain)..., dag.(domain)...)
+  return (prime.(domain)..., dual.(domain)...)
 end
 ## function Base.axes(::OpName"SWAP", domain::Tuple{Vararg{Index}})
 ##   return (prime.(reverse(domain))..., dag.(domain)...)

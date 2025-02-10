@@ -1,7 +1,7 @@
 name = "QuantumOperatorDefinitions"
 uuid = "826dd319-6fd5-459a-a990-3a4f214664bf"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.1.6"
+version = "0.1.7"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -10,13 +10,13 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 [weakdeps]
 BlockArrays = "8e7c35d0-a365-5155-bbbb-fb81a777f24e"
 GradedUnitRanges = "e2de450a-8a67-46c7-b59c-01d5a3d041c5"
-LabelledNumbers = "f856a3a6-4152-4ec4-b2a7-02c1a55d7993"
 ITensorBase = "4795dd04-0d67-49bb-8f44-b89c448a1dc7"
+LabelledNumbers = "f856a3a6-4152-4ec4-b2a7-02c1a55d7993"
 NamedDimsArrays = "60cbd0c0-df58-4cb7-918c-6f5607b73fde"
 SymmetrySectors = "f8a8ad64-adbc-4fce-92f7-ffe2bb36a86e"
 
 [extensions]
-QuantumOperatorDefinitionsITensorBaseExt = ["ITensorBase", "NamedDimsArrays"]
+QuantumOperatorDefinitionsITensorBaseExt = ["ITensorBase", "GradedUnitRanges", "NamedDimsArrays"]
 QuantumOperatorDefinitionsSymmetrySectorsExt = ["BlockArrays", "GradedUnitRanges", "LabelledNumbers", "SymmetrySectors"]
 
 [compat]
