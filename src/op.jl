@@ -143,7 +143,7 @@ function (arrtype::Type{<:AbstractArray})(
   n::StateOrOpName, domain::Tuple{Vararg{AbstractUnitRange}}
 )
   # TODO: Make `(::OpName)(domain...)` constructor process more general inputs.
-  return state_or_op_convert(n, arrtype, domain, reversed_sites(n, Int.(length.(domain))))
+  return state_or_op_convert(n, arrtype, domain, reversed_sites(n, domain))
 end
 
 function op(arrtype::Type{<:AbstractArray}, n::String, domain...; kwargs...)
@@ -574,12 +574,12 @@ function qr_positive(M::AbstractMatrix)
   return Q′, R
 end
 
-# TODO: Store a random matrix or seed as a parameter
-# of the `OpName`?
+using Random: Random
 function (n::OpName"RandomUnitary")(domain...)
-  d = prod(to_dim.(domain))
   elt = get(params(n), :eltype, Complex{Float64})
-  Q, _ = qr_positive(randn(elt, (d, d)))
+  rng = get(params(n), :rng, Random.default_rng())
+  d = prod(to_dim.(domain))
+  Q, _ = qr_positive(randn(rng, elt, (d, d)))
   return Q
 end
 @op_alias "randU" "RandomUnitary"

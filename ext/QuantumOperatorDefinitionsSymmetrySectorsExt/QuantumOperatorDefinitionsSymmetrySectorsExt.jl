@@ -93,4 +93,16 @@ function Base.AbstractUnitRange(s::GradingType"Sz", t::SiteType"Electron")
   ])
 end
 
+using QuantumOperatorDefinitions: @OpName_str, params
+using Random: Random
+function (n::OpName"RandomUnitary")(domain::AbstractGradedUnitRange...)
+  elt = get(params(n), :eltype, Complex{Float64})
+  rng = get(params(n), :rng, Random.default_rng())
+  a = zeros(elt, domain...)
+  error()
+  d = prod(to_dim.(domain))
+  Q, _ = qr_positive(randn(rng, elt, (d, d)))
+  return Q
+end
+
 end
