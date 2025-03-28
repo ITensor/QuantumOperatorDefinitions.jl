@@ -10,10 +10,8 @@
 ## Support
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" width="20%" srcset="docs/src/assets/
-CQ-dark.png">
-  <img alt="Flatiron Center for Computational Quantum Physics logo." width="20%" sr
-="docs/src/assets/CCQ.png">
+  <source media="(prefers-color-scheme: dark)" width="20%" srcset="docs/src/assets/CCQ-dark.png">
+  <img alt="Flatiron Center for Computational Quantum Physics logo." width="20%" src="docs/src/assets/CCQ.png">
 </picture>
 
 
