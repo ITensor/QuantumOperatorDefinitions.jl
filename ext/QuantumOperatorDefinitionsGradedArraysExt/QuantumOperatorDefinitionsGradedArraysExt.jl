@@ -1,17 +1,17 @@
-module QuantumOperatorDefinitionsSymmetrySectorsExt
+module QuantumOperatorDefinitionsGradedArraysExt
 
 using BlockArrays: blocklasts, blocklengths
-using GradedUnitRanges: AbstractGradedUnitRange, GradedOneTo, gradedrange
-using LabelledNumbers: label, labelled, unlabel
+using GradedArrays: AbstractGradedUnitRange, GradedOneTo, gradedrange
+using GradedArrays.LabelledNumbers: label, labelled, unlabel
+using GradedArrays.SymmetrySectors: SectorProduct, U1, Z, ×, dual
 using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions,
-  @SiteType_str,
   @GradingType_str,
-  SiteType,
+  @SiteType_str,
   GradingType,
   OpName,
+  SiteType,
   name
-using SymmetrySectors: ×, dual, SectorProduct, U1, Z
 
 function Base.axes(::OpName, domain::Tuple{Vararg{AbstractGradedUnitRange}})
   return (domain..., dual.(domain)...)

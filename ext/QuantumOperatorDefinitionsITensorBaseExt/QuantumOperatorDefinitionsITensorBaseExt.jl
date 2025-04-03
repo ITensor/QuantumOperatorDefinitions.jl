@@ -1,7 +1,7 @@
 module QuantumOperatorDefinitionsITensorBaseExt
 
 using ITensorBase: ITensorBase, ITensor, Index, gettag, prime, settag
-using GradedUnitRanges: dual
+using GradedArrays: dual
 using NamedDimsArrays: dename
 using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions,
