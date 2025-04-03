@@ -1,13 +1,13 @@
 using BlockArrays: AbstractBlockArray, blocklengths
 using BlockSparseArrays: BlockSparseArray
-using GradedUnitRanges: blocklabels, dual, isdual
+using GradedArrays: blocklabels, dual, isdual
+using GradedArrays.SymmetrySectors: SectorProduct, U1, Z
 using ITensorBase: ITensor, Index, gettag, prime, settag
-using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, state
-using SymmetrySectors: SectorProduct, U1, Z
 using NamedDimsArrays: dename
+using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, state
 using Test: @test, @testset
 
-@testset "SymmetrySectorsExt" begin
+@testset "GradedArraysExt" begin
   t = SiteType("S=1/2"; gradings=("Sz",))
   r = AbstractUnitRange(t)
   @test r == 1:2
@@ -78,7 +78,7 @@ using Test: @test, @testset
   @test blocklengths(r2) == [1, 1]
 end
 
-@testset "SymmetrySectorsExt + ITensorBaseExt" begin
+@testset "GradedArraysExt + ITensorBaseExt" begin
   i = Index(SiteType("S=1/2"; gradings=("Sz",)))
   @test gettag(i, "sitetype") == "S=1/2"
   # TODO: Test without denaming.

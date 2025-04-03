@@ -1,4 +1,4 @@
-using GradedUnitRanges: GradedUnitRanges
+using GradedArrays: GradedArrays
 using ITensorBase: ITensor, Index, gettag, hastag, prime, settag
 using NamedDimsArrays: dename
 using QuantumOperatorDefinitions: OpName, SiteType, StateName, op, site, sites, state
