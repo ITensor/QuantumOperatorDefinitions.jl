@@ -174,7 +174,7 @@ for nametype in (:StateName, :OpName)
     :(Base.:-),
   )
     @eval begin
-      $f(n::$(nametype)) = $(applied)(; f=$f, arg=n)
+      $f(n::$(nametype)) = $(applied)(; f=($f), arg=n)
     end
   end
 end
@@ -191,8 +191,9 @@ for nametype in (:StateName, :OpName)
       domains = map((start, stop) -> domain[start:stop], starts, stops)
       return kron(map((arg, domain) -> arg(domain...), n.args, domains)...)
     end
-    Base.kron(n1::$(nametype), n2::$(nametype), n_rest::$(nametype)...) =
-      $(kronned)(; args=(n1, n2, n_rest...))
+    Base.kron(n1::$(nametype), n2::$(nametype), n_rest::$(nametype)...) = $(kronned)(;
+      args=(n1, n2, n_rest...)
+    )
     ⊗(n1::$(nametype), n2::$(nametype)) = kron(n1, n2)
     ⊗(n1::$(kronned), n2::$(kronned)) = kron(n1.args..., n2.args...)
     ⊗(n1::$(nametype), n2::$(kronned)) = kron(n1, n2.args...)
@@ -211,8 +212,9 @@ for nametype in (:StateName, :OpName)
     function (n::$(summed))(domain...)
       return mapreduce(a -> a(domain...), +, n.args)
     end
-    Base.:+(n1::$(nametype), n2::$(nametype), n_rest::$(nametype)...) =
-      $(summed)(; args=(n1, n2, n_rest...))
+    Base.:+(n1::$(nametype), n2::$(nametype), n_rest::$(nametype)...) = $(summed)(;
+      args=(n1, n2, n_rest...)
+    )
     Base.:+(n1::$(summed), n2::$(summed)) = +(n1.args..., n2.args...)
     Base.:+(n1::$(summed), n2::$(nametype)) = +(n1.args..., n2)
     Base.:+(n1::$(nametype), n2::$(summed)) = +(n1, n2.args...)
@@ -252,7 +254,7 @@ end
 # Unary operations unique to operators.
 for f in (:(Base.sqrt), :(Base.exp), :(Base.cis), :(Base.cos), :(Base.sin), :(Base.adjoint))
   @eval begin
-    $f(n::OpName) = OpName"applied"(; f=$f, arg=n)
+    $f(n::OpName) = OpName"applied"(; f=($f), arg=n)
   end
 end
 
