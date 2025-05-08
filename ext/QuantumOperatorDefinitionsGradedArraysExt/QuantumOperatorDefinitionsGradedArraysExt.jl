@@ -1,9 +1,7 @@
 module QuantumOperatorDefinitionsGradedArraysExt
 
 using BlockArrays: blocklasts, blocklengths
-using GradedArrays: AbstractGradedUnitRange, GradedOneTo, gradedrange
-using GradedArrays.LabelledNumbers: label, labelled, unlabel
-using GradedArrays.SymmetrySectors: SectorProduct, U1, Z, ×, dual
+using GradedArrays: AbstractGradedUnitRange, GradedOneTo, SectorProduct, U1, Z, ×, dual, gradedrange
 using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions,
   @GradingType_str,
