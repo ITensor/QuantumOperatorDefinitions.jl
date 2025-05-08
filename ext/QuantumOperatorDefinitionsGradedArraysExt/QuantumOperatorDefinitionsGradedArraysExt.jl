@@ -1,9 +1,8 @@
 module QuantumOperatorDefinitionsGradedArraysExt
 
-using BlockArrays: blocklasts, blocklengths
-using GradedArrays: AbstractGradedUnitRange, GradedOneTo, gradedrange
-using GradedArrays.LabelledNumbers: label, labelled, unlabel
-using GradedArrays.SymmetrySectors: SectorProduct, U1, Z, ×, dual
+using BlockArrays: blocklasts, blocklength, blocklengths
+using GradedArrays:
+  AbstractGradedUnitRange, GradedOneTo, SectorProduct, U1, Z, ×, dual, gradedrange, sectors
 using QuantumOperatorDefinitions:
   QuantumOperatorDefinitions,
   @GradingType_str,
@@ -19,12 +18,15 @@ end
 
 sortedunion(a, b) = sort(union(a, b))
 function QuantumOperatorDefinitions.combine_axes(a1::GradedOneTo, a2::GradedOneTo)
+  blocklength(a1) == blocklength(a2) ||
+    throw(ArgumentError("Axes must have the same number of blocks."))
+  nblocks = blocklength(a1)
   return gradedrange(
-    map(blocklengths(a1), blocklengths(a2)) do s1, s2
-      l1 = unlabel(s1)
-      l2 = unlabel(s2)
-      @assert l1 == l2
-      labelled(l1, label(s1) × label(s2))
+    map(Base.OneTo(nblocks)) do i
+      l1 = blocklengths(a1)[i]
+      l2 = blocklengths(a2)[i]
+      l1 == l2 || throw(ArgumentError("Blocks must have the same length."))
+      return sectors(a1)[i] × sectors(a2)[i] => l1
     end,
   )
 end
