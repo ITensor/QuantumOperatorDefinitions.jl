@@ -42,24 +42,24 @@ Base.length(::SiteType"Qubit") = 2
 
 # SIC-POVMs
 (::StateName"Tetra0")(::SiteType"Qubit") = [
-  1
-  0
+    1
+    0
 ]
 (::StateName"Tetra2")(::SiteType"Qubit") = [
-  1 / √3
-  √2 / √3
+    1 / √3
+    √2 / √3
 ]
 (::StateName"Tetra3")(::SiteType"Qubit") = [
-  1 / √3
-  √2 / √3 * exp(im * 2π / 3)
+    1 / √3
+    √2 / √3 * exp(im * 2π / 3)
 ]
 (::StateName"Tetra4")(::SiteType"Qubit") = [
-  1 / √3
-  √2 / √3 * exp(im * 4π / 3)
+    1 / √3
+    √2 / √3 * exp(im * 4π / 3)
 ]
 
 # TODO: Define as `(I + σᶻ) / 2`?
-(::OpName"ProjUp")(::SiteType"Qubit") = OpName"Proj"(; index=1)(2)
+(::OpName"ProjUp")(::SiteType"Qubit") = OpName"Proj"(; index = 1)(2)
 (::OpName"projUp")(domain::SiteType"Qubit") = OpName"ProjUp"()(domain)
 (::OpName"Proj↑")(domain::SiteType"Qubit") = OpName"ProjUp"()(domain)
 (::OpName"proj↑")(domain::SiteType"Qubit") = OpName"ProjUp"()(domain)
@@ -68,7 +68,7 @@ Base.length(::SiteType"Qubit") = 2
 
 # TODO: Define as `σ⁺ * σ⁻`?
 # TODO: Define as `(I - σᶻ) / 2`?
-(::OpName"ProjDn")(::SiteType"Qubit") = OpName"Proj"(; index=2)(2)
+(::OpName"ProjDn")(::SiteType"Qubit") = OpName"Proj"(; index = 2)(2)
 (::OpName"projDn")(domain::SiteType"Qubit") = OpName"ProjDn"()(domain)
 (::OpName"Proj↓")(domain::SiteType"Qubit") = OpName"ProjDn"()(domain)
 (::OpName"proj↓")(domain::SiteType"Qubit") = OpName"ProjDn"()(domain)

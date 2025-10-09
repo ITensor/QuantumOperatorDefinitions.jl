@@ -82,7 +82,7 @@ using Test: @test
 @test Matrix(OpName("Y")) == [0 -im; im 0]
 @test Matrix(OpName("Z")) == [1 0; 0 -1]
 
-@test Matrix(OpName("Rx"; θ=π / 3)) ≈ [sin(π / 3) -cos(π / 3)*im; -cos(π / 3)*im sin(π / 3)]
+@test Matrix(OpName("Rx"; θ = π / 3)) ≈ [sin(π / 3) -cos(π / 3) * im; -cos(π / 3) * im sin(π / 3)]
 ````
 
 ---

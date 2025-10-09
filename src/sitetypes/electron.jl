@@ -46,7 +46,7 @@ alias(::OpName"ntot") = OpName"n↑"() + OpName"n↓"()
 @op_alias "Adn" "a↓"
 # c ⊗ F
 function (::OpName"c↓")(::SiteType"Electron")
-  return (OpName"C"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
+    return (OpName"C"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
 @op_alias "Cdn" "c↓"
 
@@ -55,41 +55,41 @@ end
 @op_alias "Adagdn" "a†↓"
 # c† ⊗ F
 function (::OpName"c†↓")(::SiteType"Electron")
-  return (OpName"Cdag"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
+    return (OpName"Cdag"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
 @op_alias "Cdagdn" "c†↓"
 
 # F ⊗ F
 function (::OpName"F")(::SiteType"Electron")
-  return (OpName"F"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
+    return (OpName"F"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
 
 # I ⊗ F
 function (::OpName"F↑")(::SiteType"Electron")
-  return (OpName"I"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
+    return (OpName"I"() ⊗ OpName"F"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
 @op_alias "Fup" "F↑"
 
 # F ⊗ I
 function (::OpName"F↓")(::SiteType"Electron")
-  return (OpName"F"() ⊗ OpName"I"())(SiteType"Fermion"(), SiteType"Fermion"())
+    return (OpName"F"() ⊗ OpName"I"())(SiteType"Fermion"(), SiteType"Fermion"())
 end
 @op_alias "Fdn" "F↓"
 
 function (n::OpName"SpinOp")(::SiteType"Electron")
-  return cat(falses(1, 1), n.arg(2), falses(1, 1); dims=(1, 2))
+    return cat(falses(1, 1), n.arg(2), falses(1, 1); dims = (1, 2))
 end
 
 # These implicitly define other spin operators.
 # TODO: Maybe require calling it as `OpName("SpinOp"; arg=OpName("Sz"))`?
 function (n::OpName"σ⁺")(domain::SiteType"Electron")
-  return OpName"SpinOp"(; arg=n)(domain)
+    return OpName"SpinOp"(; arg = n)(domain)
 end
 function (n::OpName"σᶻ")(domain::SiteType"Electron")
-  return OpName"SpinOp"(; arg=n)(domain)
+    return OpName"SpinOp"(; arg = n)(domain)
 end
 function (n::OpName"R")(domain::SiteType"Electron")
-  return OpName"SpinOp"(; arg=n)(domain)
+    return OpName"SpinOp"(; arg = n)(domain)
 end
 
 has_fermion_string(::OpName"c↑", ::SiteType"Electron") = true
