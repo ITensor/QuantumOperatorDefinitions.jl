@@ -2,7 +2,7 @@ module QuantumOperatorDefinitionsGradedArraysExt
 
 using BlockArrays: blocklasts, blocklength, blocklengths
 using GradedArrays:
-    AbstractGradedUnitRange, GradedOneTo, SectorProduct, U1, Z, ×, dual, gradedrange, sectors
+    AbstractGradedUnitRange, GradedOneTo, U1, Z, ×, dual, gradedrange, sectorproduct, sectors
 using QuantumOperatorDefinitions:
     QuantumOperatorDefinitions,
     @GradingType_str,
@@ -34,21 +34,21 @@ QuantumOperatorDefinitions.combine_axes(a::GradedOneTo, b::Base.OneTo) = a
 QuantumOperatorDefinitions.combine_axes(a::Base.OneTo, b::GradedOneTo) = b
 
 function Base.AbstractUnitRange(::GradingType"N", t::SiteType)
-    return gradedrange(map(i -> SectorProduct((; N = U1(i - 1))) => 1, 1:length(t)))
+    return gradedrange(map(i -> sectorproduct((; N = U1(i - 1))) => 1, 1:length(t)))
 end
 function Base.AbstractUnitRange(::GradingType"Sz", t::SiteType)
-    return gradedrange(map(i -> SectorProduct((; Sz = U1(i - 1))) => 1, 1:length(t)))
+    return gradedrange(map(i -> sectorproduct((; Sz = U1(i - 1))) => 1, 1:length(t)))
 end
 function Base.AbstractUnitRange(::GradingType"Sz↑", t::SiteType)
     return AbstractUnitRange(GradingType"Sz"(), t)
 end
 function Base.AbstractUnitRange(::GradingType"Sz↓", t::SiteType)
-    return gradedrange(map(i -> SectorProduct((; Sz = U1(-(i - 1)))) => 1, 1:length(t)))
+    return gradedrange(map(i -> sectorproduct((; Sz = U1(-(i - 1)))) => 1, 1:length(t)))
 end
 
 function sector(gradingtype::GradingType, sec)
     sectorname = Symbol(get(gradingtype, :name, name(gradingtype)))
-    return SectorProduct(NamedTuple{(sectorname,)}((sec,)))
+    return sectorproduct(NamedTuple{(sectorname,)}((sec,)))
 end
 
 function Base.AbstractUnitRange(s::GradingType"Nf", t::SiteType"Fermion")
