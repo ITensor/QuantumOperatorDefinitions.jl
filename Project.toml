@@ -19,7 +19,7 @@ QuantumOperatorDefinitionsITensorBaseExt = ["ITensorBase", "GradedArrays", "Name
 
 [compat]
 BlockArrays = "1.3.0"
-GradedArrays = "0.4, 0.5"
+GradedArrays = "0.5"
 ITensorBase = "0.2, 0.3"
 LinearAlgebra = "1.10"
 NamedDimsArrays = "0.7, 0.8"
