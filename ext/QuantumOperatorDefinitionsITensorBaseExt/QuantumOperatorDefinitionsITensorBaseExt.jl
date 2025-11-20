@@ -51,7 +51,7 @@ function ITensorBase.ITensor(n::Union{OpName, StateName}, domain::Index...)
 end
 # Fix ambiguity error with generic `AbstractArray` version.
 function ITensorBase.ITensor(n::Union{OpName, StateName}, domain::Tuple{Vararg{Index}})
-    return ITensor(AbstractArray(n, domain), axes(n, domain))
+    return AbstractArray(n, domain)
 end
 function (arrtype::Type{<:AbstractArray})(
         n::Union{OpName, StateName}, domain::Tuple{Vararg{Index}}
