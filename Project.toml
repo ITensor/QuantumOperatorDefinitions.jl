@@ -1,7 +1,7 @@
 name = "QuantumOperatorDefinitions"
 uuid = "826dd319-6fd5-459a-a990-3a4f214664bf"
+version = "0.2.12"
 authors = ["ITensor developers <support@itensor.org> and contributors"]
-version = "0.2.11"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -20,7 +20,7 @@ QuantumOperatorDefinitionsITensorBaseExt = ["ITensorBase", "GradedArrays", "Name
 [compat]
 BlockArrays = "1.3.0"
 GradedArrays = "0.5"
-ITensorBase = "0.2, 0.3"
+ITensorBase = "0.2, 0.3, 0.4"
 LinearAlgebra = "1.10"
 NamedDimsArrays = "0.7, 0.8"
 Random = "1.10"
